@@ -25,8 +25,6 @@ class AppServiceProvider extends ServiceProvider
 
         // Set asset URL to HTTPS
         $this->app['url']->assetUrl = function ($root, $path, $secure = null) {
-            // Ignore unused parameters
-            unset($root, $secure);
             return url($path, [], true);
         };
     }

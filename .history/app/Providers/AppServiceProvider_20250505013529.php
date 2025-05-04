@@ -24,9 +24,7 @@ class AppServiceProvider extends ServiceProvider
         URL::forceScheme('https');
 
         // Set asset URL to HTTPS
-        $this->app['url']->assetUrl = function ($root, $path, $secure = null) {
-            // Ignore unused parameters
-            unset($root, $secure);
+        $this->app['url']->assetUrl = function (/* $root */, $path, /* $secure = null */) {
             return url($path, [], true);
         };
     }
