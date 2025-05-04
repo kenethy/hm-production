@@ -48,11 +48,9 @@ COPY --chown=www:www . /var/www/html
 # Create storage directory if it doesn't exist
 RUN mkdir -p /var/www/html/storage/app/public
 
-# Copy Docker scripts
+# Copy Docker entry point script
 COPY docker/scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY docker/scripts/fix-permissions.sh /usr/local/bin/fix-permissions.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/fix-permissions.sh
 
 # Expose port 9000
 EXPOSE 9000

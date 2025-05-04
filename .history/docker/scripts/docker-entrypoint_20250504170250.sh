@@ -22,16 +22,6 @@ fi
 echo "Copying .env.docker to .env..."
 cp /var/www/html/.env.docker /var/www/html/.env
 
-# Install Node.js dependencies and build assets
-if [ -f /var/www/html/package.json ]; then
-    echo "Installing Node.js dependencies and building assets..."
-    cd /var/www/html
-    if [ ! -d /var/www/html/node_modules ]; then
-        npm install
-    fi
-    npm run build
-fi
-
 # Clear cache
 echo "Clearing Laravel cache..."
 php artisan config:clear
