@@ -53,6 +53,6 @@ php artisan storage:link || echo "Storage link already exists or could not be cr
 echo "Setting permissions for PHP-FPM..."
 chmod 777 /proc/self/fd/2
 
-# Execute the original command as root
-echo "Executing command as root..."
+# Switch to www user and execute the original command
+echo "Switching to www user..."
 exec "$@"

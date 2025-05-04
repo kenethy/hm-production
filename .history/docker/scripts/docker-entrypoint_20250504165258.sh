@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Fix ownership issues
+echo "Setting correct ownership for /var/www/html..."
+chown -R www:www /var/www/html
+
 # Configure Git to trust the directory
 echo "Configuring Git to trust /var/www/html..."
 git config --global --add safe.directory /var/www/html
@@ -8,7 +12,7 @@ git config --global --add safe.directory /var/www/html
 # Ensure vendor directory exists with proper permissions
 echo "Ensuring vendor directory exists with proper permissions..."
 mkdir -p /var/www/html/vendor
-chmod -R 777 /var/www/html/vendor
+chown -R www:www /var/www/html/vendor
 
 # Install Composer dependencies if vendor directory is empty
 if [ ! "$(ls -A /var/www/html/vendor)" ]; then
@@ -29,6 +33,8 @@ mkdir -p /var/www/html/bootstrap/cache
 # Set permissions for storage and bootstrap/cache directories
 chmod -R 777 /var/www/html/storage
 chmod -R 777 /var/www/html/bootstrap/cache
+chown -R www:www /var/www/html/storage
+chown -R www:www /var/www/html/bootstrap/cache
 
 # Copy .env.docker to .env
 echo "Copying .env.docker to .env..."
@@ -53,6 +59,6 @@ php artisan storage:link || echo "Storage link already exists or could not be cr
 echo "Setting permissions for PHP-FPM..."
 chmod 777 /proc/self/fd/2
 
-# Execute the original command as root
-echo "Executing command as root..."
+# Switch to www user and execute the original command
+echo "Switching to www user..."
 exec "$@"
