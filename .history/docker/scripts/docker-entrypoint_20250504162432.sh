@@ -55,10 +55,6 @@ if [ -L /var/www/html/public/storage ]; then
 fi
 php artisan storage:link || echo "Storage link already exists or could not be created."
 
-# Fix permissions for PHP-FPM
-echo "Setting permissions for PHP-FPM..."
-chmod 777 /proc/self/fd/2
-
 # Switch to www user and execute the original command
 echo "Switching to www user..."
-exec "$@"
+exec gosu www "$@"

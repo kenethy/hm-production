@@ -14,12 +14,6 @@ echo "Ensuring vendor directory exists with proper permissions..."
 mkdir -p /var/www/html/vendor
 chown -R www:www /var/www/html/vendor
 
-# Install Composer dependencies if vendor directory is empty
-if [ ! "$(ls -A /var/www/html/vendor)" ]; then
-    echo "Vendor directory is empty, installing Composer dependencies..."
-    cd /var/www/html && composer install --no-interaction --no-progress
-fi
-
 # Ensure all Laravel storage directories exist with proper permissions
 echo "Setting up Laravel storage directories with proper permissions..."
 mkdir -p /var/www/html/storage/app/public
@@ -55,10 +49,6 @@ if [ -L /var/www/html/public/storage ]; then
 fi
 php artisan storage:link || echo "Storage link already exists or could not be created."
 
-# Fix permissions for PHP-FPM
-echo "Setting permissions for PHP-FPM..."
-chmod 777 /proc/self/fd/2
-
 # Switch to www user and execute the original command
 echo "Switching to www user..."
-exec "$@"
+exec gosu www "$@"
