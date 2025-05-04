@@ -7,8 +7,6 @@ export default defineConfig({
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
-            // Force HTTPS for assets
-            https: true,
         }),
         tailwindcss(),
     ],
