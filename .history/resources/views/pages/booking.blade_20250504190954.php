@@ -81,8 +81,7 @@
                                 <option value="Servis AC">Servis AC</option>
                                 <option value="Ganti Oli">Ganti Oli</option>
                                 <option value="Perbaikan Rem">Perbaikan Rem</option>
-                                <option value="Balancing">Balancing</option>
-                                <option value="Cuci">Cuci</option>
+                                <option value="Balancing & Spooring">Balancing & Spooring</option>
                                 <option value="Lainnya">Lainnya</option>
                             </select>
                             @error('service_type')

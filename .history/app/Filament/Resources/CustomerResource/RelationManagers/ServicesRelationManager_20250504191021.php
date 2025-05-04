@@ -30,7 +30,7 @@ class ServicesRelationManager extends RelationManager
                         'Servis AC' => 'Servis AC',
                         'Ganti Oli' => 'Ganti Oli',
                         'Perbaikan Rem' => 'Perbaikan Rem',
-                        'Balancing' => 'Balancing',
+                        'Balancing ' => 'Balancing & Spooring',
                         'Lainnya' => 'Lainnya',
                     ])
                     ->required(),

@@ -47,7 +47,7 @@ class BookingResource extends Resource
                         'Servis AC' => 'Servis AC',
                         'Ganti Oli' => 'Ganti Oli',
                         'Perbaikan Rem' => 'Perbaikan Rem',
-                        'Balancing' => 'Balancing',
+                        'Balancing & Spooring' => 'Balancing & Spooring',
                         'Cuci' => 'Cuci',
                         'Lainnya' => 'Lainnya',
                     ])

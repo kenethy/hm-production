@@ -48,7 +48,6 @@ class BookingResource extends Resource
                         'Ganti Oli' => 'Ganti Oli',
                         'Perbaikan Rem' => 'Perbaikan Rem',
                         'Balancing' => 'Balancing',
-                        'Cuci' => 'Cuci',
                         'Lainnya' => 'Lainnya',
                     ])
                     ->required(),
