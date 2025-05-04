@@ -148,10 +148,10 @@
     </a>
 
     <!-- Animation Scripts -->
-    <script src="{{ asset('js/animations.min.js') }}" defer></script>
+    <script src="{{ asset('js/animations.js') }}" defer></script>
 
     <!-- Testimonial Carousel Scripts -->
-    <script src="{{ asset('js/testimonial-carousel.min.js') }}" defer></script>
+    <script src="{{ asset('js/testimonial-carousel.js') }}" defer></script>
 
     <!-- Page-specific scripts -->
     @yield('scripts')

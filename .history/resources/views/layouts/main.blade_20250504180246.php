@@ -62,59 +62,17 @@
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
     <link rel="preconnect" href="https://www.google-analytics.com" crossorigin>
 
-    <!-- Critical CSS inline -->
-    <style>
-        /* Critical CSS for above-the-fold content */
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .bg-white {
-            background-color: #fff;
-        }
-
-        .text-gray-900 {
-            color: #111827;
-        }
-
-        .flex-grow {
-            flex-grow: 1;
-        }
-    </style>
-
-    <!-- Fonts - load asynchronously -->
-    <link rel="preload" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700&display=swap"
-        as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700&display=swap" rel="stylesheet">
-    </noscript>
+    <!-- Fonts -->
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700&display=swap" rel="stylesheet" />
 
     <!-- Styles / Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Non-critical CSS - load asynchronously -->
-    <link rel="preload" href="{{ asset('css/animations.css') }}" as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
-    </noscript>
+    <!-- Animation Styles -->
+    <link rel="stylesheet" href="{{ asset('css/animations.css') }}">
 
-    <link rel="preload" href="{{ asset('css/testimonial-carousel.css') }}" as="style"
-        onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-        <link rel="stylesheet" href="{{ asset('css/testimonial-carousel.css') }}">
-    </noscript>
-
-    <!-- Preload helper -->
-    <script>
-        /* Preload polyfill for older browsers */
-        !function (n) { "use strict"; n.loadCSS || (n.loadCSS = function () { }); var t = loadCSS.relpreload = {}; if (t.support = function () { var e; try { e = n.document.createElement("link").relList.supports("preload") } catch (t) { e = !1 } return function () { return e } }(), t.bindMediaToggle = function (t) { var e = t.media || "all"; function a() { t.addEventListener ? t.removeEventListener("load", a) : t.attachEvent && t.detachEvent("onload", a), t.setAttribute("onload", null), t.media = e } t.addEventListener ? t.addEventListener("load", a) : t.attachEvent && t.attachEvent("onload", a), setTimeout(function () { t.rel = "stylesheet", t.media = "only x" }), setTimeout(a, 3e3) }, t.poly = function () { if (!t.support()) for (var e = n.document.getElementsByTagName("link"), a = 0; a < e.length; a++) { var o = e[a]; "preload" !== o.rel || "style" !== o.getAttribute("as") || o.getAttribute("data-loadcss") || (o.setAttribute("data-loadcss", !0), t.bindMediaToggle(o)) } }, !t.support()) { t.poly(); var e = n.setInterval(t.poly, 500); n.addEventListener ? n.addEventListener("load", function () { t.poly(), n.clearInterval(e) }) : n.attachEvent && n.attachEvent("onload", function () { t.poly(), n.clearInterval(e) }) } "undefined" != typeof exports ? exports.loadCSS = loadCSS : n.loadCSS = loadCSS }("undefined" != typeof global ? global : this);
-    </script>
+    <!-- Testimonial Carousel Styles -->
+    <link rel="stylesheet" href="{{ asset('css/testimonial-carousel.css') }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
@@ -148,10 +106,10 @@
     </a>
 
     <!-- Animation Scripts -->
-    <script src="{{ asset('js/animations.min.js') }}" defer></script>
+    <script src="{{ asset('js/animations.js') }}"></script>
 
     <!-- Testimonial Carousel Scripts -->
-    <script src="{{ asset('js/testimonial-carousel.min.js') }}" defer></script>
+    <script src="{{ asset('js/testimonial-carousel.js') }}"></script>
 
     <!-- Page-specific scripts -->
     @yield('scripts')

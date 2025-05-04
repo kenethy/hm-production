@@ -3,12 +3,7 @@
         <div class="flex justify-between items-center">
             <!-- Logo -->
             <a href="{{ route('home') }}" class="flex items-center">
-                <picture>
-                    <source srcset="{{ asset('/images/logo/logo.webp') }}" type="image/webp">
-                    <source srcset="{{ asset('/images/logo/logo.png') }}" type="image/png">
-                    <img src="{{ asset('/images/logo/logo.png') }}" alt="Hartono Motor Logo" class="h-12 mr-3"
-                        width="48" height="48">
-                </picture>
+                <img src="{{ asset('/images/logo/logo.png') }}" alt="Hartono Motor Logo" class="h-12 mr-3">
                 <span class="text-2xl font-bold text-red-600">HARTONO MOTOR</span>
             </a>
 

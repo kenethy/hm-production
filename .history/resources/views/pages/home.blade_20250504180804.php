@@ -273,12 +273,8 @@
             </div>
 
             <div class="order-1 lg:order-2 reveal-up">
-                <picture>
-                    <source srcset="{{ asset('images/hero-bg.webp') }}" type="image/webp">
-                    <source srcset="{{ asset('images/hero-bg.png') }}" type="image/png">
-                    <img src="{{ asset('images/hero-bg.png') }}" alt="Transparansi & Komunikasi Hartono Motor"
-                        class="rounded-lg shadow-lg w-full h-auto object-cover" loading="lazy" width="800" height="600">
-                </picture>
+                <img src="{{ asset('images/hero-bg.png') }}" alt="Transparansi & Komunikasi Hartono Motor"
+                    class="rounded-lg shadow-lg w-full h-auto object-cover" loading="lazy">
             </div>
         </div>
     </div>
