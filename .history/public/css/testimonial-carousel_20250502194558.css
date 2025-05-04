@@ -1,0 +1,106 @@
+/* Testimonial Carousel Styles - Continuous Scroll */
+.testimonial-carousel {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    padding: 2rem 0; /* Add some vertical padding */
+    /* Optional: Add a gradient mask for fading edges */
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.testimonial-track {
+    display: flex;
+    /* Width = (100% / num_visible) * total_slides */
+    /* We show 3 slides, and have 5 original + 5 duplicates = 10 total */
+    width: calc((100% / 3) * 10);
+    animation: scrollLeft 40s linear infinite; /* Adjust duration for speed */
+}
+
+.testimonial-carousel:hover .testimonial-track {
+    animation-play-state: paused; /* Pause animation on hover */
+}
+
+.testimonial-slide {
+    /* Width = 100% / num_visible */
+    flex-basis: calc(100% / 3);
+    flex-shrink: 0;
+    padding: 0 1rem; /* Spacing between cards */
+    box-sizing: border-box;
+    display: flex; /* Ensure card inside takes full height */
+}
+
+.testimonial-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    width: 100%; /* Make card fill the slide */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Distribute space if content height varies */
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Continuous Scrolling Animation */
+@keyframes scrollLeft {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        /* Translate by the width of the original set of slides */
+        /* Width = -1 * (100% / num_visible) * num_original_slides */
+        transform: translateX(calc(-1 * (100% / 3) * 5));
+    }
+}
+
+/* Responsive adjustments */
+
+/* Medium screens (Tablets) - Show 2 slides */
+@media (max-width: 1023px) {
+    .testimonial-track {
+        width: calc((100% / 2) * 10);
+        animation-name: scrollLeftTablet; /* Use different animation name if transform changes */
+    }
+    .testimonial-slide {
+        flex-basis: calc(100% / 2);
+    }
+    @keyframes scrollLeftTablet {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(calc(-1 * (100% / 2) * 5)); }
+    }
+    .testimonial-carousel {
+        -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    }
+}
+
+/* Small screens (Mobile) - Show 1 slide */
+@media (max-width: 767px) {
+    .testimonial-track {
+        width: calc(100% * 10);
+        animation-name: scrollLeftMobile; /* Use different animation name */
+        animation-duration: 30s; /* Adjust speed if needed */
+    }
+    .testimonial-slide {
+        flex-basis: 100%;
+        padding: 0 0.5rem; /* Adjust padding */
+    }
+    @keyframes scrollLeftMobile {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(calc(-1 * 100% * 5)); }
+    }
+    .testimonial-carousel {
+        -webkit-mask-image: none; /* Remove mask on mobile if desired */
+        mask-image: none;
+        padding: 1rem 0;
+    }
+    .testimonial-card {
+        padding: 1rem;
+    }
+}

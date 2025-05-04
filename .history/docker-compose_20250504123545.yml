@@ -1,0 +1,86 @@
+services:
+  # PHP Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hartono-app
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - hartono-network
+    depends_on:
+      - db
+    command: bash -c "/usr/local/bin/create-storage-link.sh && /usr/local/bin/use-docker-env.sh && php-fpm"
+
+  # Nginx Web Server
+  webserver:
+    image: nginx:alpine
+    container_name: hartono-webserver
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./docker/nginx/ssl/:/etc/nginx/ssl/
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+    networks:
+      - hartono-network
+    depends_on:
+      - app
+
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: hartono-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - hartono-network
+
+  # PhpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: hartono-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
+      UPLOAD_LIMIT: 300M
+    ports:
+      - "8080:80"
+    networks:
+      - hartono-network
+    depends_on:
+      - db
+
+  # Certbot for SSL
+  certbot:
+    image: certbot/certbot
+    container_name: hartono-certbot
+    volumes:
+      - ./docker/certbot/conf:/etc/letsencrypt
+      - ./docker/certbot/www:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email admin@hartonomotor.xyz --agree-tos --no-eff-email --force-renewal -d hartonomotor.xyz -d www.hartonomotor.xyz
+
+networks:
+  hartono-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local

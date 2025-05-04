@@ -1,0 +1,58 @@
+FROM php:8.2-fpm
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    locales \
+    zip \
+    jpegoptim optipng pngquant gifsicle \
+    vim \
+    unzip \
+    git \
+    curl \
+    libzip-dev \
+    libonig-dev \
+    libicu-dev
+
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install extensions
+RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install gd
+RUN docker-php-ext-configure intl && docker-php-ext-install intl
+
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Add user for laravel application
+RUN groupadd -g 1000 www
+RUN useradd -u 1000 -ms /bin/bash -g www www
+
+# Copy existing application directory contents (excluding public/storage)
+COPY --chown=www:www . /var/www/html
+
+# Create storage directory if it doesn't exist
+RUN mkdir -p /var/www/html/storage/app/public
+
+# Create storage link script to be run during container startup
+COPY docker/scripts/create-storage-link.sh /usr/local/bin/create-storage-link.sh
+RUN chmod +x /usr/local/bin/create-storage-link.sh
+
+# Copy Docker environment script
+COPY docker/scripts/use-docker-env.sh /usr/local/bin/use-docker-env.sh
+RUN chmod +x /usr/local/bin/use-docker-env.sh
+
+# Change current user to www
+USER www
+
+# Expose port 9000 and start php-fpm server
+EXPOSE 9000
+CMD ["php-fpm"]

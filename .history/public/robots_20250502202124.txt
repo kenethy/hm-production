@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /password/
+Allow: /
+
+Sitemap: https://hartonomotor.com/sitemap.xml
