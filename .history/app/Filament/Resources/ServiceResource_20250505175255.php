@@ -511,38 +511,9 @@ class ServiceResource extends Resource
                         ->label('Tandai Selesai')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->form([
-                            Forms\Components\Select::make('mechanics')
-                                ->label('Montir yang Mengerjakan')
-                                ->options(function () {
-                                    return Mechanic::where('is_active', true)
-                                        ->orderBy('name')
-                                        ->pluck('name', 'id')
-                                        ->toArray();
-                                })
-                                ->multiple()
-                                ->maxItems(2)
-                                ->preload()
-                                ->searchable()
-                                ->required()
-                                ->helperText('Pilih maksimal 2 montir yang mengerjakan servis ini'),
-                        ])
-                        ->action(function (array $data, \Illuminate\Database\Eloquent\Collection $records) {
-                            // Validasi montir
-                            if (empty($data['mechanics'])) {
-                                Notification::make()
-                                    ->title('Montir harus dipilih sebelum menyelesaikan servis')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-
-                            $records->each(function ($record) use ($data) {
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $records->each(function ($record) {
                                 if ($record->status === 'in_progress') {
-                                    // Simpan montir yang dipilih
-                                    $record->mechanics()->sync($data['mechanics']);
-
-                                    // Update status servis
                                     $record->status = 'completed';
                                     $record->completed_at = now();
                                     $record->save();
@@ -578,19 +549,8 @@ class ServiceResource extends Resource
 
         $form->model->total_cost = $form->model->labor_cost + $form->model->parts_cost;
 
-        if ($form->model->status === 'completed') {
-            // Jika status completed, pastikan ada montir yang dipilih
-            if ($form->model->mechanics()->count() === 0) {
-                Notification::make()
-                    ->title('Montir harus dipilih sebelum menyelesaikan servis')
-                    ->danger()
-                    ->send();
-
-                // Kembalikan status ke in_progress
-                $form->model->status = 'in_progress';
-            } else if (!$form->model->completed_at) {
-                $form->model->completed_at = now();
-            }
+        if ($form->model->status === 'completed' && !$form->model->completed_at) {
+            $form->model->completed_at = now();
         }
 
         // Check if customer_id is not set but we have customer_name and phone

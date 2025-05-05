@@ -68,16 +68,6 @@ class Service extends Model
     }
 
     /**
-     * Get the mechanics assigned to this service.
-     */
-    public function mechanics(): BelongsToMany
-    {
-        return $this->belongsToMany(Mechanic::class)
-            ->withPivot('notes')
-            ->withTimestamps();
-    }
-
-    /**
      * Boot the model.
      */
     protected static function boot()
