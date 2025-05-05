@@ -46,7 +46,8 @@ class AdminPanelProvider extends PanelProvider
                 // Resources available to all users (both admin and staff)
                 BookingResource::class,
                 ServiceResource::class,
-
+            ])
+            ->resources([
                 // Resources available only to admin users
                 CustomerResource::class,
                 PromoResource::class,
@@ -55,7 +56,9 @@ class AdminPanelProvider extends PanelProvider
                 BlogPostResource::class,
                 BlogCategoryResource::class,
                 BlogTagResource::class,
-            ])
+            ], function () {
+                return Auth::user() && Auth::user()->role === 'admin';
+            })
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,

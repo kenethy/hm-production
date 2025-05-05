@@ -316,10 +316,4 @@ class CustomerResource extends Resource
             'edit' => Pages\EditCustomer::route('/{record}/edit'),
         ];
     }
-
-    public static function canAccess(): bool
-    {
-        $user = Auth::user();
-        return $user && $user->role === 'admin';
-    }
 }
