@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Running migration for time tracking feature..."
+echo "Fixing time tracking feature..."
 
 # Check if docker-compose is running
 if ! docker-compose ps | grep -q "app.*Up"; then
@@ -10,6 +10,7 @@ if ! docker-compose ps | grep -q "app.*Up"; then
 fi
 
 # Run specific migration for time tracking
+echo "Running migration for time tracking..."
 docker-compose exec app php artisan migrate --path=database/migrations/2025_05_05_111911_add_time_tracking_to_services_table.php
 
 # Clear cache
@@ -20,4 +21,5 @@ docker-compose exec app php artisan route:clear
 docker-compose exec app php artisan view:clear
 docker-compose exec app php artisan filament:clear-cache
 
-echo "Done! Migration for time tracking feature has been applied."
+echo "Done! Time tracking feature has been fixed."
+echo "You can now create and edit services with automatic time tracking."
