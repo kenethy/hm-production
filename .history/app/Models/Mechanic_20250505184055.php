@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -80,11 +79,11 @@ class Mechanic extends Model
     {
         // Format dates to ensure consistency
         if (is_string($weekStart)) {
-            $weekStart = Carbon::parse($weekStart)->startOfDay();
+            $weekStart = Carbon\Carbon::parse($weekStart)->startOfDay();
         }
 
         if (is_string($weekEnd)) {
-            $weekEnd = Carbon::parse($weekEnd)->endOfDay();
+            $weekEnd = Carbon\Carbon::parse($weekEnd)->endOfDay();
         }
 
         // Check if report already exists
