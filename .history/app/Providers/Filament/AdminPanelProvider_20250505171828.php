@@ -41,20 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->resources([
-                // Resources available to all users
-                BookingResource::class,
-                ServiceResource::class,
-
-                // Resources available only to admin users
-                CustomerResource::class,
-                PromoResource::class,
-                GalleryResource::class,
-                GalleryCategoryResource::class,
-                BlogPostResource::class,
-                BlogCategoryResource::class,
-                BlogTagResource::class,
-            ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
@@ -77,22 +64,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->navigationGroups([
-                NavigationGroup::make()
-                    ->label('Servis & Booking'),
-                NavigationGroup::make()
-                    ->label('Konten Website'),
-                NavigationGroup::make()
-                    ->label('Manajemen Pelanggan'),
-            ])
-            ->authGuard('web')
-            ->renderHook(
-                'panels::resource.pages.list-records.table.before',
-                fn() => auth()->user()->isStaff() ?
-                    '<div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
-                        <span class="font-medium">Akses Terbatas!</span> Anda memiliki akses terbatas hanya untuk mengelola Servis dan Booking.
-                    </div>' : ''
-            );
+            ]);
     }
 }

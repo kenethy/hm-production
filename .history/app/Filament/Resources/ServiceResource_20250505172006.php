@@ -20,17 +20,6 @@ class ServiceResource extends Resource
 {
     protected static ?string $model = Service::class;
 
-    protected static ?string $recordTitleAttribute = 'customer_name';
-
-    protected static ?string $navigationGroup = 'Servis & Booking';
-
-    protected static ?int $navigationSort = 1;
-
-    public static function getPolicy(): string
-    {
-        return ResourcePolicy::class;
-    }
-
     protected static ?string $navigationIcon = 'heroicon-o-wrench';
 
     protected static ?string $navigationLabel = 'Services';
