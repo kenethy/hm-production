@@ -47,7 +47,7 @@ class AdminPanelProvider extends PanelProvider
                 BookingResource::class,
                 ServiceResource::class,
             ])
-            ->resources([
+            ->adminResources([
                 // Resources available only to admin users
                 CustomerResource::class,
                 PromoResource::class,
@@ -56,9 +56,7 @@ class AdminPanelProvider extends PanelProvider
                 BlogPostResource::class,
                 BlogCategoryResource::class,
                 BlogTagResource::class,
-            ], function () {
-                return Auth::user() && Auth::user()->role === 'admin';
-            })
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,

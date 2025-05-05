@@ -47,7 +47,7 @@ class AdminPanelProvider extends PanelProvider
                 BookingResource::class,
                 ServiceResource::class,
             ])
-            ->resources([
+            ->adminResources([
                 // Resources available only to admin users
                 CustomerResource::class,
                 PromoResource::class,
@@ -56,9 +56,7 @@ class AdminPanelProvider extends PanelProvider
                 BlogPostResource::class,
                 BlogCategoryResource::class,
                 BlogTagResource::class,
-            ], function () {
-                return Auth::user() && Auth::user()->role === 'admin';
-            })
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
@@ -83,10 +81,8 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->middleware([
-                'role:staff' => [
-                    'before' => true,
-                ],
-            ])
+                'role:staff',
+            ], isPrefixed: false)
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('Servis & Booking'),
@@ -99,8 +95,8 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 'panels::resource.pages.list-records.table.before',
                 function () {
-                    $user = Auth::user();
-                    if ($user && $user->role === 'staff') {
+                    $user = \Illuminate\Support\Facades\Auth::user();
+                    if ($user && method_exists($user, 'isStaff') && $user->isStaff()) {
                         return '<div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
                             <span class="font-medium">Akses Terbatas!</span> Anda memiliki akses terbatas hanya untuk mengelola Servis dan Booking.
                         </div>';

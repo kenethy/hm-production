@@ -11,7 +11,7 @@ use App\Filament\Resources\GalleryCategoryResource;
 use App\Filament\Resources\GalleryResource;
 use App\Filament\Resources\PromoResource;
 use App\Filament\Resources\ServiceResource;
-use App\Http\Middleware\CheckUserRole;
+use App\Models\User;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,7 +27,6 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -47,7 +46,7 @@ class AdminPanelProvider extends PanelProvider
                 BookingResource::class,
                 ServiceResource::class,
             ])
-            ->resources([
+            ->adminResources([
                 // Resources available only to admin users
                 CustomerResource::class,
                 PromoResource::class,
@@ -56,9 +55,7 @@ class AdminPanelProvider extends PanelProvider
                 BlogPostResource::class,
                 BlogCategoryResource::class,
                 BlogTagResource::class,
-            ], function () {
-                return Auth::user() && Auth::user()->role === 'admin';
-            })
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
@@ -83,10 +80,8 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->middleware([
-                'role:staff' => [
-                    'before' => true,
-                ],
-            ])
+                'role:staff',
+            ], isPrefixed: false)
             ->navigationGroups([
                 NavigationGroup::make()
                     ->label('Servis & Booking'),
@@ -98,15 +93,10 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->renderHook(
                 'panels::resource.pages.list-records.table.before',
-                function () {
-                    $user = Auth::user();
-                    if ($user && $user->role === 'staff') {
-                        return '<div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
-                            <span class="font-medium">Akses Terbatas!</span> Anda memiliki akses terbatas hanya untuk mengelola Servis dan Booking.
-                        </div>';
-                    }
-                    return '';
-                }
+                fn() => auth()->user()->isStaff() ?
+                    '<div class="p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400" role="alert">
+                        <span class="font-medium">Akses Terbatas!</span> Anda memiliki akses terbatas hanya untuk mengelola Servis dan Booking.
+                    </div>' : ''
             );
     }
 }
