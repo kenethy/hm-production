@@ -407,30 +407,6 @@ class ServiceResource extends Resource
                         // Simpan montir yang dipilih
                         $record->mechanics()->sync($data['mechanics']);
 
-                        // Hitung biaya jasa per montir
-                        $mechanicsCount = count($data['mechanics']);
-                        $laborCostPerMechanic = $mechanicsCount > 0 ? $record->labor_cost / $mechanicsCount : 0;
-
-                        // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
-                        $now = now();
-                        $weekStart = $now->copy()->startOfWeek();
-                        $weekEnd = $now->copy()->endOfWeek();
-
-                        // Update biaya jasa untuk setiap montir
-                        foreach ($data['mechanics'] as $mechanicId) {
-                            $record->mechanics()->updateExistingPivot($mechanicId, [
-                                'labor_cost' => $laborCostPerMechanic,
-                                'week_start' => $weekStart,
-                                'week_end' => $weekEnd,
-                            ]);
-
-                            // Generate atau update laporan mingguan montir
-                            $mechanic = Mechanic::find($mechanicId);
-                            if ($mechanic) {
-                                $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                            }
-                        }
-
                         // Update status servis
                         $record->status = 'completed';
                         $record->completed_at = now();
@@ -608,30 +584,6 @@ class ServiceResource extends Resource
                                 if ($record->status === 'in_progress') {
                                     // Simpan montir yang dipilih
                                     $record->mechanics()->sync($data['mechanics']);
-
-                                    // Hitung biaya jasa per montir
-                                    $mechanicsCount = count($data['mechanics']);
-                                    $laborCostPerMechanic = $mechanicsCount > 0 ? $record->labor_cost / $mechanicsCount : 0;
-
-                                    // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
-                                    $now = now();
-                                    $weekStart = $now->copy()->startOfWeek();
-                                    $weekEnd = $now->copy()->endOfWeek();
-
-                                    // Update biaya jasa untuk setiap montir
-                                    foreach ($data['mechanics'] as $mechanicId) {
-                                        $record->mechanics()->updateExistingPivot($mechanicId, [
-                                            'labor_cost' => $laborCostPerMechanic,
-                                            'week_start' => $weekStart,
-                                            'week_end' => $weekEnd,
-                                        ]);
-
-                                        // Generate atau update laporan mingguan montir
-                                        $mechanic = Mechanic::find($mechanicId);
-                                        if ($mechanic) {
-                                            $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                                        }
-                                    }
 
                                     // Update status servis
                                     $record->status = 'completed';

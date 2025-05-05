@@ -180,27 +180,16 @@ class ServiceResource extends Resource
                 Forms\Components\Section::make('Biaya')
                     ->schema([
                         Forms\Components\TextInput::make('labor_cost')
-                            ->label('Biaya Jasa Total')
-                            ->helperText('Biaya jasa total akan dibagi rata ke semua montir yang mengerjakan')
+                            ->label('Biaya Jasa')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0)
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set, $get) {
-                                // Recalculate total cost
-                                $set('total_cost', $state + $get('parts_cost'));
-                            }),
+                            ->default(0),
 
                         Forms\Components\TextInput::make('parts_cost')
                             ->label('Biaya Sparepart')
                             ->numeric()
                             ->prefix('Rp')
-                            ->default(0)
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set, $get) {
-                                // Recalculate total cost
-                                $set('total_cost', $get('labor_cost') + $state);
-                            }),
+                            ->default(0),
 
                         Forms\Components\TextInput::make('total_cost')
                             ->label('Total Biaya')
@@ -230,24 +219,6 @@ class ServiceResource extends Resource
                             ->columnSpanFull(),
                     ]),
 
-                Forms\Components\Section::make('Waktu')
-                    ->schema([
-                        Forms\Components\DateTimePicker::make('entry_time')
-                            ->label('Jam Masuk')
-                            ->seconds(false)
-                            ->timezone('Asia/Jakarta')
-                            ->default(now())
-                            ->disabled(fn($record) => $record && $record->entry_time)
-                            ->helperText('Otomatis diisi saat servis dibuat'),
-
-                        Forms\Components\DateTimePicker::make('exit_time')
-                            ->label('Jam Keluar')
-                            ->seconds(false)
-                            ->timezone('Asia/Jakarta')
-                            ->disabled(fn($record) => $record && $record->status !== 'completed')
-                            ->helperText('Otomatis diisi saat servis ditandai selesai'),
-                    ])->columns(2),
-
                 Forms\Components\Section::make('Status')
                     ->schema([
                         Forms\Components\Select::make('status')
@@ -270,9 +241,6 @@ class ServiceResource extends Resource
                                             ->title('Montir harus dipilih sebelum menyelesaikan servis')
                                             ->danger()
                                             ->send();
-                                    } else {
-                                        // Set exit_time jika status completed
-                                        $set('exit_time', now());
                                     }
                                 }
                             }),
@@ -407,34 +375,9 @@ class ServiceResource extends Resource
                         // Simpan montir yang dipilih
                         $record->mechanics()->sync($data['mechanics']);
 
-                        // Hitung biaya jasa per montir
-                        $mechanicsCount = count($data['mechanics']);
-                        $laborCostPerMechanic = $mechanicsCount > 0 ? $record->labor_cost / $mechanicsCount : 0;
-
-                        // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
-                        $now = now();
-                        $weekStart = $now->copy()->startOfWeek();
-                        $weekEnd = $now->copy()->endOfWeek();
-
-                        // Update biaya jasa untuk setiap montir
-                        foreach ($data['mechanics'] as $mechanicId) {
-                            $record->mechanics()->updateExistingPivot($mechanicId, [
-                                'labor_cost' => $laborCostPerMechanic,
-                                'week_start' => $weekStart,
-                                'week_end' => $weekEnd,
-                            ]);
-
-                            // Generate atau update laporan mingguan montir
-                            $mechanic = Mechanic::find($mechanicId);
-                            if ($mechanic) {
-                                $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                            }
-                        }
-
                         // Update status servis
                         $record->status = 'completed';
                         $record->completed_at = now();
-                        $record->exit_time = now();
                         $record->save();
 
                         Notification::make()
@@ -609,34 +552,9 @@ class ServiceResource extends Resource
                                     // Simpan montir yang dipilih
                                     $record->mechanics()->sync($data['mechanics']);
 
-                                    // Hitung biaya jasa per montir
-                                    $mechanicsCount = count($data['mechanics']);
-                                    $laborCostPerMechanic = $mechanicsCount > 0 ? $record->labor_cost / $mechanicsCount : 0;
-
-                                    // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
-                                    $now = now();
-                                    $weekStart = $now->copy()->startOfWeek();
-                                    $weekEnd = $now->copy()->endOfWeek();
-
-                                    // Update biaya jasa untuk setiap montir
-                                    foreach ($data['mechanics'] as $mechanicId) {
-                                        $record->mechanics()->updateExistingPivot($mechanicId, [
-                                            'labor_cost' => $laborCostPerMechanic,
-                                            'week_start' => $weekStart,
-                                            'week_end' => $weekEnd,
-                                        ]);
-
-                                        // Generate atau update laporan mingguan montir
-                                        $mechanic = Mechanic::find($mechanicId);
-                                        if ($mechanic) {
-                                            $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                                        }
-                                    }
-
                                     // Update status servis
                                     $record->status = 'completed';
                                     $record->completed_at = now();
-                                    $record->exit_time = now();
                                     $record->save();
                                 }
                             });
@@ -694,26 +612,6 @@ class ServiceResource extends Resource
                 if (!$form->model->exit_time) {
                     $form->model->exit_time = now();
                 }
-
-                // Hitung biaya jasa per montir
-                $mechanicsCount = $form->model->mechanics()->count();
-                $laborCostPerMechanic = $mechanicsCount > 0 ? $form->model->labor_cost / $mechanicsCount : 0;
-
-                // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
-                $now = now();
-                $weekStart = $now->copy()->startOfWeek();
-                $weekEnd = $now->copy()->endOfWeek();
-
-                // Update biaya jasa untuk setiap montir
-                $form->model->mechanics()->each(function ($mechanic) use ($laborCostPerMechanic, $weekStart, $weekEnd) {
-                    $mechanic->pivot->labor_cost = $laborCostPerMechanic;
-                    $mechanic->pivot->week_start = $weekStart;
-                    $mechanic->pivot->week_end = $weekEnd;
-                    $mechanic->pivot->save();
-
-                    // Generate atau update laporan mingguan montir
-                    $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                });
             }
         }
 

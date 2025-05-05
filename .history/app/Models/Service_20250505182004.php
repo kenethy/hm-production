@@ -34,8 +34,6 @@ class Service extends Model
         'parts_cost' => 'decimal:2',
         'total_cost' => 'decimal:2',
         'completed_at' => 'datetime',
-        'entry_time' => 'datetime',
-        'exit_time' => 'datetime',
     ];
 
     /**
