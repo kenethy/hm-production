@@ -572,56 +572,30 @@ class ServiceResource extends Resource
                             Log::info('Using existing mechanics:', $existingMechanics);
                         }
 
+                        // Simpan montir yang dipilih
+                        $record->mechanics()->sync($data['mechanics']);
+
+                        // Hitung biaya jasa per montir - setiap montir mendapatkan biaya jasa penuh
+                        // Tidak perlu membagi biaya jasa, setiap montir mendapatkan biaya jasa penuh
+                        $laborCostPerMechanic = $record->labor_cost;
+
                         // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
                         $now = now();
                         $weekStart = $now->copy()->startOfWeek();
                         $weekEnd = $now->copy()->endOfWeek();
 
-                        // Hapus semua relasi montir yang ada
-                        $record->mechanics()->detach();
+                        // Update biaya jasa untuk setiap montir
+                        foreach ($data['mechanics'] as $mechanicId) {
+                            $record->mechanics()->updateExistingPivot($mechanicId, [
+                                'labor_cost' => $laborCostPerMechanic,
+                                'week_start' => $weekStart,
+                                'week_end' => $weekEnd,
+                            ]);
 
-                        // Proses biaya jasa per montir
-                        if (isset($data['mechanic_costs']) && is_array($data['mechanic_costs'])) {
-                            Log::info('Mechanic costs data:', $data['mechanic_costs']);
-
-                            foreach ($data['mechanic_costs'] as $index => $costData) {
-                                if (isset($data['mechanics'][$index]) && isset($costData['labor_cost'])) {
-                                    $mechanicId = $data['mechanics'][$index];
-                                    $laborCost = $costData['labor_cost'];
-
-                                    Log::info("Setting labor cost for mechanic #{$mechanicId}: {$laborCost}");
-
-                                    // Tambahkan montir dengan biaya jasa yang ditentukan
-                                    $record->mechanics()->attach($mechanicId, [
-                                        'labor_cost' => $laborCost,
-                                        'week_start' => $weekStart,
-                                        'week_end' => $weekEnd,
-                                    ]);
-
-                                    // Generate atau update laporan mingguan montir
-                                    $mechanic = Mechanic::find($mechanicId);
-                                    if ($mechanic) {
-                                        $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                                    }
-                                }
-                            }
-                        } else {
-                            // Fallback ke cara lama jika tidak ada data biaya jasa per montir
-                            Log::info('No mechanic costs data, using default labor cost');
-
-                            // Simpan montir yang dipilih dengan biaya jasa default
-                            foreach ($data['mechanics'] as $mechanicId) {
-                                $record->mechanics()->attach($mechanicId, [
-                                    'labor_cost' => $record->labor_cost,
-                                    'week_start' => $weekStart,
-                                    'week_end' => $weekEnd,
-                                ]);
-
-                                // Generate atau update laporan mingguan montir
-                                $mechanic = Mechanic::find($mechanicId);
-                                if ($mechanic) {
-                                    $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                                }
+                            // Generate atau update laporan mingguan montir
+                            $mechanic = Mechanic::find($mechanicId);
+                            if ($mechanic) {
+                                $mechanic->generateWeeklyReport($weekStart, $weekEnd);
                             }
                         }
 
