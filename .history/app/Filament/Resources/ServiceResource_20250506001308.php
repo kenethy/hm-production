@@ -360,11 +360,6 @@ class ServiceResource extends Resource
                     ->label('Nomor Plat')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('vehicle.full_details')
-                    ->label('Kendaraan')
-                    ->searchable()
-                    ->toggleable(),
-
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Jenis Servis')
                     ->searchable(),

@@ -14,7 +14,6 @@ class Service extends Model
     protected $fillable = [
         'booking_id',
         'customer_id',
-        'vehicle_id',
         'customer_name',
         'phone',
         'car_model',
@@ -44,17 +43,9 @@ class Service extends Model
     /**
      * Get the booking associated with the service.
      */
-    public function booking(): BelongsTo
+    public function booking()
     {
         return $this->belongsTo(Booking::class);
-    }
-
-    /**
-     * Get the vehicle associated with the service.
-     */
-    public function vehicle(): BelongsTo
-    {
-        return $this->belongsTo(Vehicle::class);
     }
 
     /**
@@ -69,7 +60,7 @@ class Service extends Model
     /**
      * Get the updates for the service.
      */
-    public function updates(): HasMany
+    public function updates()
     {
         return $this->hasMany(ServiceUpdate::class);
     }
@@ -77,7 +68,7 @@ class Service extends Model
     /**
      * Get the customer associated with the service.
      */
-    public function customer(): BelongsTo
+    public function customer()
     {
         return $this->belongsTo(Customer::class);
     }

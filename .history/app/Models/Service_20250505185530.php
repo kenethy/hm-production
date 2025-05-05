@@ -77,7 +77,7 @@ class Service extends Model
     /**
      * Get the customer associated with the service.
      */
-    public function customer(): BelongsTo
+    public function customer()
     {
         return $this->belongsTo(Customer::class);
     }

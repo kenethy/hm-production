@@ -38,7 +38,7 @@ class Customer extends Model
     /**
      * Get all services for this customer.
      */
-    public function services(): HasMany
+    public function services()
     {
         return $this->hasMany(Service::class);
     }

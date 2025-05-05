@@ -360,11 +360,6 @@ class ServiceResource extends Resource
                     ->label('Nomor Plat')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('vehicle.full_details')
-                    ->label('Kendaraan')
-                    ->searchable()
-                    ->toggleable(),
-
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Jenis Servis')
                     ->searchable(),
@@ -428,54 +423,6 @@ class ServiceResource extends Resource
                     ])
                     ->placeholder('Semua Status')
                     ->multiple(),
-
-                Tables\Filters\SelectFilter::make('customer_id')
-                    ->label('Pelanggan')
-                    ->relationship('customer', 'name')
-                    ->searchable()
-                    ->preload(),
-
-                Tables\Filters\SelectFilter::make('vehicle_id')
-                    ->label('Kendaraan')
-                    ->relationship('vehicle', 'license_plate')
-                    ->searchable()
-                    ->preload(),
-
-                Tables\Filters\Filter::make('license_plate')
-                    ->label('Nomor Plat')
-                    ->form([
-                        Forms\Components\TextInput::make('license_plate')
-                            ->label('Nomor Plat')
-                            ->placeholder('Masukkan nomor plat')
-                            ->required(),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['license_plate'],
-                                fn(Builder $query, $licensePlate): Builder => $query->where('license_plate', 'like', "%{$licensePlate}%"),
-                            );
-                    }),
-
-                Tables\Filters\Filter::make('service_date')
-                    ->label('Tanggal Servis')
-                    ->form([
-                        Forms\Components\DatePicker::make('created_from')
-                            ->label('Dari Tanggal'),
-                        Forms\Components\DatePicker::make('created_until')
-                            ->label('Sampai Tanggal'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['created_from'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
-                            )
-                            ->when(
-                                $data['created_until'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
-                            );
-                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

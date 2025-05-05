@@ -38,7 +38,7 @@ class Customer extends Model
     /**
      * Get all services for this customer.
      */
-    public function services(): HasMany
+    public function services()
     {
         return $this->hasMany(Service::class);
     }
@@ -46,17 +46,9 @@ class Customer extends Model
     /**
      * Get all bookings for this customer.
      */
-    public function bookings(): HasMany
+    public function bookings()
     {
         return $this->hasMany(Booking::class, 'phone', 'phone');
-    }
-
-    /**
-     * Get all vehicles for this customer.
-     */
-    public function vehicles(): HasMany
-    {
-        return $this->hasMany(Vehicle::class);
     }
 
     /**
