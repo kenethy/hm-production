@@ -48,7 +48,6 @@ class AdminPanelProvider extends PanelProvider
                 // Resources available to all users (both admin and staff)
                 BookingResource::class,
                 ServiceResource::class,
-                MechanicReportResource::class,
 
                 // Resources available only to admin users
                 CustomerResource::class,
