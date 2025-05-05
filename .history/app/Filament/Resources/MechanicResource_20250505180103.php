@@ -142,12 +142,4 @@ class MechanicResource extends Resource
             'edit' => Pages\EditMechanic::route('/{record}/edit'),
         ];
     }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-    }
 }
