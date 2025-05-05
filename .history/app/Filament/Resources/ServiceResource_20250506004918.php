@@ -718,15 +718,10 @@ class ServiceResource extends Resource
                                 ->helperText('Pilih maksimal 2 montir yang mengerjakan servis ini'),
                         ])
                         ->action(function (array $data, \Illuminate\Database\Eloquent\Collection $records) {
-                            // Debug: Tampilkan data yang diterima dengan lebih detail
-                            Log::info('Bulk action mechanics data received:', $data);
-                            Log::info('Bulk action data structure:', ['type' => gettype($data), 'keys' => array_keys($data)]);
-
-                            // Validasi montir dengan lebih detail
+                            // Validasi montir
                             if (empty($data['mechanics'])) {
                                 Notification::make()
                                     ->title('Montir harus dipilih sebelum menyelesaikan servis')
-                                    ->body('Silakan pilih minimal 1 montir untuk menyelesaikan servis ini.')
                                     ->danger()
                                     ->send();
                                 return;
