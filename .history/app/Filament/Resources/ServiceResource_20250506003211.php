@@ -17,7 +17,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class ServiceResource extends Resource
 {
@@ -504,7 +503,7 @@ class ServiceResource extends Resource
                     ])
                     ->action(function (array $data, Service $record) {
                         // Debug: Tampilkan data yang diterima
-                        Log::info('Mechanics data received:', $data);
+                        \Log::info('Mechanics data received:', $data);
 
                         // Validasi montir dengan lebih detail
                         if (!isset($data['mechanics']) || !is_array($data['mechanics']) || count($data['mechanics']) === 0) {
@@ -520,7 +519,7 @@ class ServiceResource extends Resource
                         $record->mechanics()->sync($data['mechanics']);
 
                         // Hitung biaya jasa per montir - setiap montir mendapatkan biaya jasa penuh
-                        // Tidak perlu membagi biaya jasa, setiap montir mendapatkan biaya jasa penuh
+                        $mechanicsCount = count($data['mechanics']);
                         $laborCostPerMechanic = $record->labor_cost;
 
                         // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
@@ -721,9 +720,9 @@ class ServiceResource extends Resource
                                     // Simpan montir yang dipilih
                                     $record->mechanics()->sync($data['mechanics']);
 
-                                    // Hitung biaya jasa per montir - setiap montir mendapatkan biaya jasa penuh
-                                    // Tidak perlu membagi biaya jasa, setiap montir mendapatkan biaya jasa penuh
-                                    $laborCostPerMechanic = $record->labor_cost;
+                                    // Hitung biaya jasa per montir
+                                    $mechanicsCount = count($data['mechanics']);
+                                    $laborCostPerMechanic = $mechanicsCount > 0 ? $record->labor_cost / $mechanicsCount : 0;
 
                                     // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
                                     $now = now();
@@ -807,9 +806,9 @@ class ServiceResource extends Resource
                     $form->model->exit_time = now();
                 }
 
-                // Hitung biaya jasa per montir - setiap montir mendapatkan biaya jasa penuh
-                // Tidak perlu membagi biaya jasa, setiap montir mendapatkan biaya jasa penuh
-                $laborCostPerMechanic = $form->model->labor_cost;
+                // Hitung biaya jasa per montir
+                $mechanicsCount = $form->model->mechanics()->count();
+                $laborCostPerMechanic = $mechanicsCount > 0 ? $form->model->labor_cost / $mechanicsCount : 0;
 
                 // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
                 $now = now();

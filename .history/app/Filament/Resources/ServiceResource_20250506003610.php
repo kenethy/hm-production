@@ -807,9 +807,9 @@ class ServiceResource extends Resource
                     $form->model->exit_time = now();
                 }
 
-                // Hitung biaya jasa per montir - setiap montir mendapatkan biaya jasa penuh
-                // Tidak perlu membagi biaya jasa, setiap montir mendapatkan biaya jasa penuh
-                $laborCostPerMechanic = $form->model->labor_cost;
+                // Hitung biaya jasa per montir
+                $mechanicsCount = $form->model->mechanics()->count();
+                $laborCostPerMechanic = $mechanicsCount > 0 ? $form->model->labor_cost / $mechanicsCount : 0;
 
                 // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
                 $now = now();
