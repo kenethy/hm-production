@@ -758,12 +758,6 @@ class ServiceResource extends Resource
 
                             // Simpan montir yang dipilih dengan biaya jasa default
                             foreach ($data['mechanics'] as $mechanicId) {
-                                // Pastikan defaultLaborCost adalah angka yang valid
-                                $defaultLaborCost = (float) $defaultLaborCost;
-
-                                // Log untuk debugging
-                                Log::info("Fallback: Attaching mechanic #{$mechanicId} with default labor_cost: {$defaultLaborCost} (type: " . gettype($defaultLaborCost) . ")");
-
                                 $record->mechanics()->attach($mechanicId, [
                                     'labor_cost' => $defaultLaborCost,
                                     'week_start' => $weekStart,
@@ -972,12 +966,6 @@ class ServiceResource extends Resource
 
                                     // Update biaya jasa untuk setiap montir
                                     foreach ($data['mechanics'] as $mechanicId) {
-                                        // Pastikan laborCostPerMechanic adalah angka yang valid
-                                        $laborCostPerMechanic = (float) $laborCostPerMechanic;
-
-                                        // Log untuk debugging
-                                        Log::info("Bulk action: Updating mechanic #{$mechanicId} with labor_cost: {$laborCostPerMechanic} (type: " . gettype($laborCostPerMechanic) . ")");
-
                                         $record->mechanics()->updateExistingPivot($mechanicId, [
                                             'labor_cost' => $laborCostPerMechanic,
                                             'week_start' => $weekStart,
@@ -1077,13 +1065,7 @@ class ServiceResource extends Resource
 
                 // Update biaya jasa untuk setiap montir
                 $form->model->mechanics()->each(function ($mechanic) use ($laborCostPerMechanic, $weekStart, $weekEnd) {
-                    // Pastikan laborCostPerMechanic adalah angka yang valid
-                    $validLaborCost = (float) $laborCostPerMechanic;
-
-                    // Log untuk debugging
-                    \Illuminate\Support\Facades\Log::info("beforeSave: Updating mechanic #{$mechanic->id} with labor_cost: {$validLaborCost} (type: " . gettype($validLaborCost) . ")");
-
-                    $mechanic->pivot->labor_cost = $validLaborCost;
+                    $mechanic->pivot->labor_cost = $laborCostPerMechanic;
                     $mechanic->pivot->week_start = $weekStart;
                     $mechanic->pivot->week_end = $weekEnd;
                     $mechanic->pivot->save();

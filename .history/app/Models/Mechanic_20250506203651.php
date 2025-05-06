@@ -98,9 +98,6 @@ class Mechanic extends Model
      */
     public function generateWeeklyReport($weekStart, $weekEnd)
     {
-        // Log untuk debugging
-        \Illuminate\Support\Facades\Log::info("Generating weekly report for mechanic #{$this->id} ({$this->name})");
-
         // Format dates to ensure consistency
         if (is_string($weekStart)) {
             $weekStart = Carbon::parse($weekStart)->startOfDay();
@@ -110,33 +107,15 @@ class Mechanic extends Model
             $weekEnd = Carbon::parse($weekEnd)->endOfDay();
         }
 
-        \Illuminate\Support\Facades\Log::info("Week period: {$weekStart} to {$weekEnd}");
-
         // Check if report already exists
         $existingReport = $this->reports()
             ->where('week_start', $weekStart)
             ->where('week_end', $weekEnd)
             ->first();
 
-        \Illuminate\Support\Facades\Log::info("Existing report: " . ($existingReport ? "Yes (ID: {$existingReport->id})" : "No"));
-
         // Count services and calculate labor cost
         $servicesCount = $this->countWeeklyServices($weekStart, $weekEnd);
         $totalLaborCost = $this->calculateWeeklyLaborCost($weekStart, $weekEnd);
-
-        \Illuminate\Support\Facades\Log::info("Services count: {$servicesCount}, Total labor cost: {$totalLaborCost}");
-
-        // Periksa apakah ada servis di pivot table
-        $pivotData = \Illuminate\Support\Facades\DB::table('mechanic_service')
-            ->where('mechanic_id', $this->id)
-            ->where('week_start', $weekStart)
-            ->where('week_end', $weekEnd)
-            ->get();
-
-        \Illuminate\Support\Facades\Log::info("Pivot data count: " . $pivotData->count());
-        foreach ($pivotData as $pivot) {
-            \Illuminate\Support\Facades\Log::info("Pivot: mechanic_id={$pivot->mechanic_id}, service_id={$pivot->service_id}, labor_cost={$pivot->labor_cost}");
-        }
 
         if ($existingReport) {
             // Update existing report
@@ -145,36 +124,20 @@ class Mechanic extends Model
                 'total_labor_cost' => $totalLaborCost,
             ]);
 
-            \Illuminate\Support\Facades\Log::info("Updated existing report ID: {$existingReport->id}");
-
             return $existingReport;
         } else {
             // Create new report only if there are services or labor costs
             if ($servicesCount > 0 || $totalLaborCost > 0) {
-                $report = $this->reports()->create([
+                return $this->reports()->create([
                     'week_start' => $weekStart,
                     'week_end' => $weekEnd,
                     'services_count' => $servicesCount,
                     'total_labor_cost' => $totalLaborCost,
                 ]);
-
-                \Illuminate\Support\Facades\Log::info("Created new report ID: {$report->id}");
-
-                return $report;
-            } else {
-                // Jika tidak ada servis atau biaya jasa, tetap buat laporan dengan nilai 0
-                // Ini untuk memastikan laporan tetap muncul di halaman Rekap Montirs
-                $report = $this->reports()->create([
-                    'week_start' => $weekStart,
-                    'week_end' => $weekEnd,
-                    'services_count' => 0,
-                    'total_labor_cost' => 0,
-                ]);
-
-                \Illuminate\Support\Facades\Log::info("Created empty report ID: {$report->id}");
-
-                return $report;
             }
+
+            // Return null if no report was created
+            return null;
         }
     }
 }
