@@ -626,7 +626,6 @@ class ServiceResource extends Resource
                                         ->itemLabel(function (array $state): ?string {
                                             return isset($state['mechanic_id']) && $state['mechanic_id'] ? Mechanic::find($state['mechanic_id'])?->name : null;
                                         })
-                                        ->default($mechanicCosts) // Set default mechanic_costs
                                         ->addable(false)
                                         ->deletable(false)
                                         ->reorderable(false)
