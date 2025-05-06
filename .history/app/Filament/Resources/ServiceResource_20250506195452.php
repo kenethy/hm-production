@@ -598,9 +598,9 @@ class ServiceResource extends Resource
                         if (isset($data['mechanic_costs']) && is_array($data['mechanic_costs'])) {
                             Log::info('Mechanic costs data:', $data['mechanic_costs']);
 
-                            foreach ($data['mechanic_costs'] as $costData) {
-                                if (isset($costData['mechanic_id']) && isset($costData['labor_cost'])) {
-                                    $mechanicId = $costData['mechanic_id'];
+                            foreach ($data['mechanic_costs'] as $index => $costData) {
+                                if (isset($data['mechanics'][$index]) && isset($costData['labor_cost'])) {
+                                    $mechanicId = $data['mechanics'][$index];
                                     $laborCost = $costData['labor_cost'];
 
                                     Log::info("Setting labor cost for mechanic #{$mechanicId}: {$laborCost}");
