@@ -228,7 +228,7 @@ class ServiceResource extends Resource
 
                     ]),
 
-                Forms\Components\Section::make('Montir (Opsional)')
+                Forms\Components\Section::make('Montir')
                     ->schema([
                         Forms\Components\Select::make('mechanics')
                             ->label('Montir yang Mengerjakan')
@@ -243,53 +243,8 @@ class ServiceResource extends Resource
                             ->maxItems(2)
                             ->preload()
                             ->searchable()
-                            ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                if (is_array($state)) {
-                                    $mechanicCosts = [];
-                                    foreach ($state as $mechanicId) {
-                                        $mechanicCosts[] = [
-                                            'mechanic_id' => $mechanicId,
-                                            'labor_cost' => 0,
-                                        ];
-                                    }
-                                    $set('mechanic_costs', $mechanicCosts);
-                                }
-                            })
-                            ->helperText('Pilih maksimal 2 montir yang mengerjakan servis ini (opsional, dapat diisi nanti)')
+                            ->helperText('Pilih maksimal 2 montir yang mengerjakan servis ini')
                             ->columnSpanFull(),
-
-                        Forms\Components\Repeater::make('mechanic_costs')
-                            ->label('Biaya Jasa per Montir')
-                            ->schema([
-                                Forms\Components\Select::make('mechanic_id')
-                                    ->label('Montir')
-                                    ->options(function () {
-                                        return Mechanic::where('is_active', true)
-                                            ->orderBy('name')
-                                            ->pluck('name', 'id')
-                                            ->toArray();
-                                    })
-                                    ->disabled()
-                                    ->dehydrated(true)
-                                    ->required(),
-
-                                Forms\Components\TextInput::make('labor_cost')
-                                    ->label('Biaya Jasa')
-                                    ->numeric()
-                                    ->prefix('Rp')
-                                    ->default(0)
-                                    ->required(),
-                            ])
-                            ->itemLabel(function (array $state): ?string {
-                                return isset($state['mechanic_id']) && $state['mechanic_id'] ? Mechanic::find($state['mechanic_id'])?->name : null;
-                            })
-                            ->addable(false)
-                            ->deletable(false)
-                            ->reorderable(false)
-                            ->dehydrated()
-                            ->columns(2)
-                            ->visible(fn(Forms\Get $get) => is_array($get('mechanics')) && count($get('mechanics')) > 0),
                     ]),
 
                 Forms\Components\Section::make('Waktu')
@@ -886,22 +841,9 @@ class ServiceResource extends Resource
     // Add a hook to calculate the total cost before saving
     public static function beforeSave(Forms\Form $form): void
     {
-        $state = $form->getState();
+        $form->getState();
 
-        // Hitung total biaya jasa dari mechanic_costs jika ada
-        $totalLaborCost = 0;
-        if (isset($state['mechanic_costs']) && is_array($state['mechanic_costs'])) {
-            foreach ($state['mechanic_costs'] as $costData) {
-                if (isset($costData['labor_cost'])) {
-                    $totalLaborCost += $costData['labor_cost'];
-                }
-            }
-        }
-
-        // Set labor_cost dan total_cost
-        $form->model->labor_cost = $totalLaborCost;
-        $form->model->parts_cost = 0; // Tidak lagi menggunakan parts_cost
-        $form->model->total_cost = $totalLaborCost;
+        $form->model->total_cost = $form->model->labor_cost + $form->model->parts_cost;
 
         // Jika ini adalah record baru, set entry_time ke waktu saat ini
         if (!$form->model->exists && !$form->model->entry_time) {

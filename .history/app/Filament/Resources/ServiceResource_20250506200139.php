@@ -886,22 +886,9 @@ class ServiceResource extends Resource
     // Add a hook to calculate the total cost before saving
     public static function beforeSave(Forms\Form $form): void
     {
-        $state = $form->getState();
+        $form->getState();
 
-        // Hitung total biaya jasa dari mechanic_costs jika ada
-        $totalLaborCost = 0;
-        if (isset($state['mechanic_costs']) && is_array($state['mechanic_costs'])) {
-            foreach ($state['mechanic_costs'] as $costData) {
-                if (isset($costData['labor_cost'])) {
-                    $totalLaborCost += $costData['labor_cost'];
-                }
-            }
-        }
-
-        // Set labor_cost dan total_cost
-        $form->model->labor_cost = $totalLaborCost;
-        $form->model->parts_cost = 0; // Tidak lagi menggunakan parts_cost
-        $form->model->total_cost = $totalLaborCost;
+        $form->model->total_cost = $form->model->labor_cost + $form->model->parts_cost;
 
         // Jika ini adalah record baru, set entry_time ke waktu saat ini
         if (!$form->model->exists && !$form->model->entry_time) {
