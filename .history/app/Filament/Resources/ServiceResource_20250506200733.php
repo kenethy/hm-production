@@ -951,24 +951,25 @@ class ServiceResource extends Resource
             }
         }
 
-        // Process customer and vehicle information
-        if ($form->model->customer_name && $form->model->phone && $form->model->license_plate && $form->model->car_model) {
-            // Find or create vehicle based on phone and license plate
-            $vehicle = Vehicle::findOrCreateByPhoneAndPlate(
-                $form->model->phone,
-                $form->model->license_plate,
-                [
-                    'customer_name' => $form->model->customer_name,
-                    'car_model' => $form->model->car_model,
-                ]
-            );
+        // Check if customer_id is not set but we have customer_name and phone
+        if (!$form->model->customer_id && $form->model->customer_name && $form->model->phone) {
+            // Check if customer exists with this phone number
+            $customer = Customer::where('phone', $form->model->phone)->first();
 
-            // Associate service with customer and vehicle
-            $form->model->customer_id = $vehicle->customer_id;
-            $form->model->vehicle_id = $vehicle->id;
+            if ($customer) {
+                // If customer exists, associate service with this customer
+                $form->model->customer_id = $customer->id;
+            } else {
+                // If customer doesn't exist, create a new one
+                $customer = Customer::create([
+                    'name' => $form->model->customer_name,
+                    'phone' => $form->model->phone,
+                    'is_active' => true,
+                ]);
 
-            // Log the vehicle association
-            Log::info("Service associated with vehicle: {$vehicle->id} ({$vehicle->model} - {$vehicle->license_plate})");
+                // Associate service with the new customer
+                $form->model->customer_id = $customer->id;
+            }
         }
     }
 
