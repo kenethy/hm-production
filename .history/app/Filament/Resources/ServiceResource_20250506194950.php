@@ -16,7 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class ServiceResource extends Resource
@@ -87,7 +87,7 @@ class ServiceResource extends Resource
                             ->searchable()
                             ->preload()
                             ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            ->afterStateUpdated(function ($state, Forms\Set $set, $get) {
                                 if ($state) {
                                     $customer = Customer::find($state);
                                     if ($customer) {
@@ -152,7 +152,7 @@ class ServiceResource extends Resource
                             ->searchable()
                             ->preload()
                             ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            ->afterStateUpdated(function ($state, Forms\Set $set, $get) {
                                 if ($state) {
                                     $vehicle = \App\Models\Vehicle::find($state);
                                     if ($vehicle) {
@@ -510,11 +510,7 @@ class ServiceResource extends Resource
                                         ->required()
                                         ->default($existingMechanics)
                                         ->reactive()
-                                        ->afterStateUpdated(function ($state, Forms\Set $set) {
-                                            if (is_array($state)) {
-                                                $set('mechanic_costs', array_fill_keys($state, ['labor_cost' => 0]));
-                                            }
-                                        })
+                                        ->afterStateUpdated(fn($state, Forms\Set $set) => $set('mechanic_costs', array_fill_keys($state, 0)))
                                         ->helperText('Pilih maksimal 2 montir yang mengerjakan servis ini'),
                                 ]),
 
