@@ -463,12 +463,6 @@ class ServiceResource extends Resource
                     ->label('Jam Keluar')
                     ->dateTime('d F Y H:i')
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('invoice_number')
-                    ->label('Nomor Nota')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')

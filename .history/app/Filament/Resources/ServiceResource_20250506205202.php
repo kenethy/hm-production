@@ -463,12 +463,6 @@ class ServiceResource extends Resource
                     ->label('Jam Keluar')
                     ->dateTime('d F Y H:i')
                     ->sortable(),
-
-                Tables\Columns\TextColumn::make('invoice_number')
-                    ->label('Nomor Nota')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -795,9 +789,8 @@ class ServiceResource extends Resource
                             }
                         }
 
-                        // Update status servis dan nomor nota
+                        // Update status servis
                         $record->status = 'completed';
-                        $record->invoice_number = $data['invoice_number'] ?? null;
                         $record->completed_at = now();
                         $record->exit_time = now();
                         $record->save();
@@ -944,12 +937,6 @@ class ServiceResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->form([
-                            Forms\Components\TextInput::make('invoice_number')
-                                ->label('Nomor Nota')
-                                ->required()
-                                ->placeholder('Masukkan nomor nota')
-                                ->helperText('Nomor nota wajib diisi sebagai bukti fisik servis'),
-
                             Forms\Components\Select::make('mechanics')
                                 ->label('Montir yang Mengerjakan')
                                 ->options(function () {
@@ -1004,7 +991,6 @@ class ServiceResource extends Resource
 
                                         $record->mechanics()->updateExistingPivot($mechanicId, [
                                             'labor_cost' => $laborCostPerMechanic,
-                                            'invoice_number' => $data['invoice_number'] ?? null,
                                             'week_start' => $weekStart,
                                             'week_end' => $weekEnd,
                                         ]);
@@ -1016,9 +1002,8 @@ class ServiceResource extends Resource
                                         }
                                     }
 
-                                    // Update status servis dan nomor nota
+                                    // Update status servis
                                     $record->status = 'completed';
-                                    $record->invoice_number = $data['invoice_number'] ?? null;
                                     $record->completed_at = now();
                                     $record->exit_time = now();
                                     $record->save();

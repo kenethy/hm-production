@@ -89,7 +89,7 @@ class Service extends Model
     public function mechanics(): BelongsToMany
     {
         return $this->belongsToMany(Mechanic::class)
-            ->withPivot('notes', 'labor_cost', 'invoice_number', 'week_start', 'week_end')
+            ->withPivot('notes')
             ->withTimestamps();
     }
 

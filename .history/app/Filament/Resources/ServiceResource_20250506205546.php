@@ -950,6 +950,12 @@ class ServiceResource extends Resource
                                 ->placeholder('Masukkan nomor nota')
                                 ->helperText('Nomor nota wajib diisi sebagai bukti fisik servis'),
 
+                            Forms\Components\TextInput::make('invoice_number')
+                                ->label('Nomor Nota')
+                                ->required()
+                                ->placeholder('Masukkan nomor nota')
+                                ->helperText('Nomor nota wajib diisi sebagai bukti fisik servis'),
+
                             Forms\Components\Select::make('mechanics')
                                 ->label('Montir yang Mengerjakan')
                                 ->options(function () {
