@@ -696,29 +696,10 @@ class ServiceResource extends Resource
                         if (isset($data['mechanic_costs']) && is_array($data['mechanic_costs'])) {
                             Log::info('Mechanic costs data:', $data['mechanic_costs']);
 
-                            // Hitung total biaya jasa dari semua montir
-                            $totalLaborCost = 0;
-                            foreach ($data['mechanic_costs'] as $costData) {
-                                if (isset($costData['labor_cost'])) {
-                                    $totalLaborCost += (int)$costData['labor_cost'];
-                                }
-                            }
-
-                            // Update total biaya jasa pada record
-                            $record->labor_cost = $totalLaborCost;
-                            $record->total_cost = $totalLaborCost; // Karena parts_cost sudah tidak digunakan
-
-                            Log::info("Updated service #{$record->id} total labor cost: {$totalLaborCost}");
-
                             foreach ($data['mechanic_costs'] as $costData) {
                                 if (isset($costData['mechanic_id']) && isset($costData['labor_cost'])) {
                                     $mechanicId = $costData['mechanic_id'];
-                                    $laborCost = (int)$costData['labor_cost'];
-
-                                    // Pastikan biaya jasa tidak 0
-                                    if ($laborCost == 0 && $totalLaborCost > 0 && count($data['mechanic_costs']) > 0) {
-                                        $laborCost = $totalLaborCost / count($data['mechanic_costs']);
-                                    }
+                                    $laborCost = $costData['labor_cost'];
 
                                     Log::info("Setting labor cost for mechanic #{$mechanicId}: {$laborCost}");
 
@@ -740,20 +721,10 @@ class ServiceResource extends Resource
                             // Fallback ke cara lama jika tidak ada data biaya jasa per montir
                             Log::info('No mechanic costs data, using default labor cost');
 
-                            // Jika biaya jasa total adalah 0, set default ke nilai yang masuk akal
-                            $defaultLaborCost = $record->labor_cost;
-                            if ($defaultLaborCost == 0) {
-                                $defaultLaborCost = 50000; // Default biaya jasa yang masuk akal
-
-                                // Update total biaya jasa pada record
-                                $record->labor_cost = $defaultLaborCost * count($data['mechanics']);
-                                $record->total_cost = $record->labor_cost;
-                            }
-
                             // Simpan montir yang dipilih dengan biaya jasa default
                             foreach ($data['mechanics'] as $mechanicId) {
                                 $record->mechanics()->attach($mechanicId, [
-                                    'labor_cost' => $defaultLaborCost,
+                                    'labor_cost' => $record->labor_cost,
                                     'week_start' => $weekStart,
                                     'week_end' => $weekEnd,
                                 ]);
