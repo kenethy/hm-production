@@ -276,7 +276,7 @@
                 <picture>
                     <source srcset="{{ asset('images/hero-bg.webp') }}" type="image/webp">
                     <source srcset="{{ asset('images/hero-bg.png') }}" type="image/png">
-                    <img src="{{ asset('images/kami/kami.jpg') }}" alt="Transparansi & Komunikasi Hartono Motor"
+                    <img src="{{ asset('images/.png') }}" alt="Transparansi & Komunikasi Hartono Motor"
                         class="rounded-lg shadow-lg w-full h-auto object-cover" loading="lazy" width="800" height="600">
                 </picture>
             </div>
