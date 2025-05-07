@@ -13,6 +13,19 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Group;
+use Filament\Forms\Components\Placeholder;
 
 class BlogPostResource extends Resource
 {
@@ -79,7 +92,6 @@ class BlogPostResource extends Resource
                                     ->fileAttachmentsDisk('public')
                                     ->fileAttachmentsDirectory('blog-content')
                                     ->toolbarButtons([
-                                        'attachFiles',
                                         'blockquote',
                                         'bold',
                                         'bulletList',

@@ -79,7 +79,6 @@ class BlogPostResource extends Resource
                                     ->fileAttachmentsDisk('public')
                                     ->fileAttachmentsDirectory('blog-content')
                                     ->toolbarButtons([
-                                        'attachFiles',
                                         'blockquote',
                                         'bold',
                                         'bulletList',

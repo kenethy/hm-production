@@ -50,4 +50,3 @@ class CreateBlogPost extends CreateRecord
             ->success()
             ->send();
     }
-}
