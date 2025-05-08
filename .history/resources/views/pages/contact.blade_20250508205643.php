@@ -4,7 +4,7 @@
 <!-- Hero Section -->
 <section class="relative bg-gray-900 text-white py-20">
     <div class="absolute inset-0 overflow-hidden">
-        <img src="{{ asset('images/kontak/kontak.png') }}" alt="Kontak Hartono Motor"
+        <img src="{{ asset('images/contact-bg.jpg') }}" alt="Kontak Hartono Motor"
             class="w-full h-full object-cover opacity-40">
     </div>
     <div class="container mx-auto px-4 relative z-10">
@@ -151,7 +151,7 @@
                                 d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z" />
                         </svg>
                     </a>
-                    <a href="https://www.tiktok.com/@hartonomotorsidoarjo" target="_blank"
+                    <a href="https://tiktok.com/@hartonomotor.sda" target="_blank"
                         class="bg-gray-50 hover:bg-gray-100 p-3 rounded-full transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="currentColor"
                             viewBox="0 0 24 24">

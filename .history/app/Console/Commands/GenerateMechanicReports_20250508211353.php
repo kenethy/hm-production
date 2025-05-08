@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Mechanic;
+use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 

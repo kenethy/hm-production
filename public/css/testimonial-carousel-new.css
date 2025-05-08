@@ -1,0 +1,209 @@
+/* Modern Testimonial Carousel Styles */
+.testimonial-section {
+    position: relative;
+    overflow: hidden;
+    padding: 2rem 0;
+    background-color: #f9fafb;
+}
+
+.testimonial-container {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Main carousel container */
+.testimonial-carousel {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    padding: 2rem 0;
+}
+
+/* Carousel track for sliding */
+.testimonial-track {
+    display: flex;
+    transition: transform 0.5s ease;
+    will-change: transform;
+}
+
+/* Individual slide */
+.testimonial-slide {
+    flex: 0 0 100%;
+    padding: 0 1rem;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    display: none;
+}
+
+.testimonial-slide.active {
+    opacity: 1;
+    display: block;
+}
+
+/* Card design */
+.testimonial-card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+    height: 100%;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.testimonial-card::before {
+    content: '"';
+    position: absolute;
+    top: 1rem;
+    left: 1.5rem;
+    font-size: 5rem;
+    line-height: 1;
+    font-family: serif;
+    color: rgba(220, 38, 38, 0.1);
+    z-index: 0;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Customer info section */
+.testimonial-customer {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.testimonial-avatar {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-right: 1rem;
+}
+
+.testimonial-info h4 {
+    font-weight: 700;
+    font-size: 1.125rem;
+    margin: 0 0 0.25rem 0;
+    color: #111827;
+}
+
+.testimonial-info p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Rating stars */
+.testimonial-rating {
+    display: flex;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.star {
+    color: #FBBF24;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.star-empty {
+    color: #E5E7EB;
+}
+
+/* Testimonial content */
+.testimonial-content {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #4B5563;
+    position: relative;
+    z-index: 1;
+    flex-grow: 1;
+}
+
+/* Navigation controls */
+.testimonial-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.testimonial-dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.testimonial-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background-color: #E5E7EB;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.testimonial-dot.active {
+    background-color: #DC2626;
+    transform: scale(1.2);
+}
+
+.testimonial-arrows {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 10;
+    padding: 0 1rem;
+}
+
+.testimonial-arrow {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #111827;
+}
+
+.testimonial-arrow:hover {
+    background-color: #DC2626;
+    color: white;
+}
+
+.testimonial-arrow svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    .testimonial-slide {
+        flex: 0 0 50%;
+    }
+}
+
+@media (min-width: 1024px) {
+    .testimonial-slide {
+        flex: 0 0 33.333%;
+    }
+}

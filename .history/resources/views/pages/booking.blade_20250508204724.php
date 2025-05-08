@@ -156,7 +156,7 @@
                         </svg>
                         0821 3520 2581
                     </a>
-                    <a href="https://wa.me/6281235202581" target="_blank"
+                    <a href="https://wa.me/62812" target="_blank"
                         class="flex items-center text-gray-700 hover:text-red-600 transition-colors hover-scale">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="currentColor"
                             viewBox="0 0 24 24">

@@ -4,7 +4,7 @@
 <!-- Hero Section -->
 <section class="relative bg-gray-900 text-white py-20">
     <div class="absolute inset-0 overflow-hidden">
-        <img src="{{ asset('images/kontak/kontak.png') }}" alt="Kontak Hartono Motor"
+        <img src="{{ asset('images/contact-bg.jpg') }}" alt="Kontak Hartono Motor"
             class="w-full h-full object-cover opacity-40">
     </div>
     <div class="container mx-auto px-4 relative z-10">

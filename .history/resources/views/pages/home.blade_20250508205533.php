@@ -295,8 +295,8 @@
             <p class="text-gray-600 max-w-2xl mx-auto reveal-up">Apa kata pelanggan tentang layanan kami.</p>
         </div>
 
-        <!-- Include the new testimonial carousel component -->
-        @include('components.testimonial-carousel-new')
+        <!-- Include the testimonial carousel component -->
+        @include('components.testimonial-carousel')
     </div>
 </section>
 

@@ -147,7 +147,7 @@
                 <p class="text-gray-600 mb-4">Jika Anda memiliki pertanyaan atau membutuhkan bantuan dalam proses
                     booking, silakan hubungi kami.</p>
                 <div class="flex justify-center space-x-4">
-                    <a href="tel:+6282135202581"
+                    <a href="tel:+62318912345"
                         class="flex items-center text-gray-700 hover:text-red-600 transition-colors hover-scale">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
@@ -156,7 +156,7 @@
                         </svg>
                         0821 3520 2581
                     </a>
-                    <a href="https://wa.me/6281235202581" target="_blank"
+                    <a href="https://wa.me/6281234567890" target="_blank"
                         class="flex items-center text-gray-700 hover:text-red-600 transition-colors hover-scale">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="currentColor"
                             viewBox="0 0 24 24">
