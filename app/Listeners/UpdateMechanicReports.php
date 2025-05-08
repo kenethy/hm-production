@@ -2,8 +2,11 @@
 
 namespace App\Listeners;
 
-use App\Events\ServiceUpdated;
+use App\Events\MechanicsAssigned;
+use App\Events\ServiceStatusChanged;
 use App\Models\Mechanic;
+use App\Models\Service;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\DB;
@@ -14,17 +17,64 @@ class UpdateMechanicReports implements ShouldQueue
     use InteractsWithQueue;
 
     /**
-     * Handle the event.
-     *
-     * @param  \App\Events\ServiceUpdated  $event
-     * @return void
+     * Handle the ServiceStatusChanged event.
      */
-    public function handle(ServiceUpdated $event)
+    public function handle(ServiceStatusChanged|MechanicsAssigned $event): void
     {
         $service = $event->service;
         
-        Log::info("UpdateMechanicReports: Processing service #{$service->id} with status {$service->status}");
-        
+        if ($event instanceof ServiceStatusChanged) {
+            Log::info("UpdateMechanicReports: Service #{$service->id} status changed from {$event->previousStatus} to {$service->status}");
+            $this->handleServiceStatusChanged($service, $event->previousStatus);
+        } elseif ($event instanceof MechanicsAssigned) {
+            Log::info("UpdateMechanicReports: Mechanics assigned to service #{$service->id}");
+            $this->handleMechanicsAssigned($service, $event->previousMechanicIds);
+        }
+    }
+    
+    /**
+     * Handle service status change.
+     */
+    private function handleServiceStatusChanged(Service $service, ?string $previousStatus): void
+    {
+        // If service is completed, update mechanic reports
+        if ($service->status === 'completed') {
+            $this->updateMechanicReportsForCompletedService($service);
+        } 
+        // If service was completed but now is not, remove labor costs
+        elseif ($previousStatus === 'completed') {
+            $this->removeLaborCostsFromMechanics($service);
+        }
+    }
+    
+    /**
+     * Handle mechanics assignment.
+     */
+    private function handleMechanicsAssigned(Service $service, array $previousMechanicIds): void
+    {
+        // Only process if service is completed
+        if ($service->status === 'completed') {
+            // Get current mechanic IDs
+            $currentMechanicIds = $service->mechanics()->pluck('mechanics.id')->toArray();
+            
+            // Find mechanics that were removed
+            $removedMechanicIds = array_diff($previousMechanicIds, $currentMechanicIds);
+            
+            // Remove labor costs for removed mechanics
+            if (!empty($removedMechanicIds)) {
+                $this->removeLaborCostsForMechanics($service, $removedMechanicIds);
+            }
+            
+            // Update reports for current mechanics
+            $this->updateMechanicReportsForCompletedService($service);
+        }
+    }
+    
+    /**
+     * Update mechanic reports for a completed service.
+     */
+    private function updateMechanicReportsForCompletedService(Service $service): void
+    {
         // Get all mechanics for this service
         $mechanics = $service->mechanics;
         
@@ -38,8 +88,8 @@ class UpdateMechanicReports implements ShouldQueue
         // Process in a transaction to ensure consistency
         DB::transaction(function () use ($service, $mechanics) {
             // Get the week start and end dates
-            $weekStart = now()->startOfWeek();
-            $weekEnd = now()->endOfWeek();
+            $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
+            $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
             
             // Process each mechanic
             foreach ($mechanics as $mechanic) {
@@ -60,31 +110,16 @@ class UpdateMechanicReports implements ShouldQueue
                 // Check if labor_cost is set
                 $laborCost = $mechanic->pivot->labor_cost;
                 
-                // If service is completed, ensure labor_cost is set
-                if ($service->status === 'completed') {
-                    // If labor_cost is not set or is 0, set a default value
-                    if (empty($laborCost) || $laborCost == 0) {
-                        $defaultLaborCost = 50000; // Default labor cost
-                        Log::info("UpdateMechanicReports: Setting default labor cost for mechanic #{$mechanic->id}: {$defaultLaborCost}");
-                        
-                        $service->mechanics()->updateExistingPivot($mechanic->id, [
-                            'labor_cost' => $defaultLaborCost,
-                        ]);
-                        
-                        $laborCost = $defaultLaborCost;
-                    }
-                } 
-                // If service is cancelled or in_progress, set labor_cost to 0
-                else if ($service->status === 'cancelled' || $service->status === 'in_progress') {
-                    if ($laborCost > 0) {
-                        Log::info("UpdateMechanicReports: Setting labor cost to 0 for mechanic #{$mechanic->id} (service is {$service->status})");
-                        
-                        $service->mechanics()->updateExistingPivot($mechanic->id, [
-                            'labor_cost' => 0,
-                        ]);
-                        
-                        $laborCost = 0;
-                    }
+                // If labor_cost is not set or is 0, set a default value
+                if (empty($laborCost) || $laborCost == 0) {
+                    $defaultLaborCost = 50000; // Default labor cost
+                    Log::info("UpdateMechanicReports: Setting default labor cost for mechanic #{$mechanic->id}: {$defaultLaborCost}");
+                    
+                    $service->mechanics()->updateExistingPivot($mechanic->id, [
+                        'labor_cost' => $defaultLaborCost,
+                    ]);
+                    
+                    $laborCost = $defaultLaborCost;
                 }
                 
                 Log::info("UpdateMechanicReports: Generating report for mechanic #{$mechanic->id} with labor cost {$laborCost}");
@@ -96,35 +131,152 @@ class UpdateMechanicReports implements ShouldQueue
     }
     
     /**
-     * Generate or update a weekly report for a mechanic
-     *
-     * @param Mechanic $mechanic
-     * @param string $weekStart
-     * @param string $weekEnd
-     * @return void
+     * Remove labor costs from mechanics for a service.
+     */
+    private function removeLaborCostsFromMechanics(Service $service): void
+    {
+        // Get all mechanics for this service
+        $mechanics = $service->mechanics;
+        
+        if ($mechanics->count() === 0) {
+            return;
+        }
+        
+        Log::info("UpdateMechanicReports: Removing labor costs for service #{$service->id} with {$mechanics->count()} mechanics");
+        
+        // Process in a transaction to ensure consistency
+        DB::transaction(function () use ($service, $mechanics) {
+            // Process each mechanic
+            foreach ($mechanics as $mechanic) {
+                // Get week dates
+                $weekStart = $mechanic->pivot->week_start;
+                $weekEnd = $mechanic->pivot->week_end;
+                
+                if (empty($weekStart) || empty($weekEnd)) {
+                    continue;
+                }
+                
+                // Set labor cost to 0
+                $service->mechanics()->updateExistingPivot($mechanic->id, [
+                    'labor_cost' => 0,
+                ]);
+                
+                Log::info("UpdateMechanicReports: Set labor cost to 0 for mechanic #{$mechanic->id} on service #{$service->id}");
+                
+                // Update the report
+                $this->generateOrUpdateReport($mechanic, $weekStart, $weekEnd);
+            }
+        });
+    }
+    
+    /**
+     * Remove labor costs for specific mechanics.
+     */
+    private function removeLaborCostsForMechanics(Service $service, array $mechanicIds): void
+    {
+        if (empty($mechanicIds)) {
+            return;
+        }
+        
+        Log::info("UpdateMechanicReports: Removing labor costs for specific mechanics on service #{$service->id}", [
+            'mechanic_ids' => $mechanicIds
+        ]);
+        
+        // Process in a transaction to ensure consistency
+        DB::transaction(function () use ($service, $mechanicIds) {
+            // Get mechanics data from pivot table before they are removed
+            $mechanicsData = DB::table('mechanic_service')
+                ->where('service_id', $service->id)
+                ->whereIn('mechanic_id', $mechanicIds)
+                ->get();
+            
+            // Process each mechanic
+            foreach ($mechanicsData as $mechanicData) {
+                $weekStart = $mechanicData->week_start;
+                $weekEnd = $mechanicData->week_end;
+                
+                if (empty($weekStart) || empty($weekEnd)) {
+                    continue;
+                }
+                
+                // Get the mechanic
+                $mechanic = Mechanic::find($mechanicData->mechanic_id);
+                
+                if (!$mechanic) {
+                    continue;
+                }
+                
+                Log::info("UpdateMechanicReports: Updating report for removed mechanic #{$mechanic->id}");
+                
+                // Update the report
+                $this->generateOrUpdateReport($mechanic, $weekStart, $weekEnd);
+            }
+        });
+    }
+    
+    /**
+     * Generate or update a weekly report for a mechanic.
      */
     private function generateOrUpdateReport(Mechanic $mechanic, string $weekStart, string $weekEnd): void
     {
         try {
             Log::info("UpdateMechanicReports: Generating report for mechanic #{$mechanic->id} for week {$weekStart} to {$weekEnd}");
             
-            // Force refresh mechanic from database
-            $freshMechanic = Mechanic::find($mechanic->id);
+            // Calculate total labor cost for completed services
+            $totalLaborCost = DB::table('mechanic_service')
+                ->join('services', 'mechanic_service.service_id', '=', 'services.id')
+                ->where('mechanic_service.mechanic_id', $mechanic->id)
+                ->where('mechanic_service.week_start', $weekStart)
+                ->where('mechanic_service.week_end', $weekEnd)
+                ->where('services.status', 'completed')
+                ->sum('mechanic_service.labor_cost');
             
-            // Generate or update weekly report for this mechanic
-            $report = $freshMechanic->generateWeeklyReport($weekStart, $weekEnd);
+            // Count completed services
+            $servicesCount = DB::table('mechanic_service')
+                ->join('services', 'mechanic_service.service_id', '=', 'services.id')
+                ->where('mechanic_service.mechanic_id', $mechanic->id)
+                ->where('mechanic_service.week_start', $weekStart)
+                ->where('mechanic_service.week_end', $weekEnd)
+                ->where('services.status', 'completed')
+                ->count();
             
-            Log::info("UpdateMechanicReports: Report generated for mechanic #{$mechanic->id}", [
-                'report_id' => $report->id,
-                'services_count' => $report->services_count,
-                'total_labor_cost' => $report->total_labor_cost,
-            ]);
+            Log::info("UpdateMechanicReports: Calculated for mechanic #{$mechanic->id}: services_count={$servicesCount}, total_labor_cost={$totalLaborCost}");
+            
+            // Find or create the report
+            $report = DB::table('mechanic_reports')
+                ->where('mechanic_id', $mechanic->id)
+                ->where('week_start', $weekStart)
+                ->where('week_end', $weekEnd)
+                ->first();
+            
+            if ($report) {
+                // Update existing report
+                DB::table('mechanic_reports')
+                    ->where('id', $report->id)
+                    ->update([
+                        'services_count' => $servicesCount,
+                        'total_labor_cost' => $totalLaborCost,
+                        'updated_at' => now(),
+                    ]);
+                
+                Log::info("UpdateMechanicReports: Updated report #{$report->id} for mechanic #{$mechanic->id}");
+            } else {
+                // Create new report
+                $reportId = DB::table('mechanic_reports')->insertGetId([
+                    'mechanic_id' => $mechanic->id,
+                    'week_start' => $weekStart,
+                    'week_end' => $weekEnd,
+                    'services_count' => $servicesCount,
+                    'total_labor_cost' => $totalLaborCost,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                Log::info("UpdateMechanicReports: Created new report #{$reportId} for mechanic #{$mechanic->id}");
+            }
         } catch (\Exception $e) {
             Log::error("UpdateMechanicReports: Error generating report for mechanic #{$mechanic->id}: " . $e->getMessage(), [
-                'mechanic_id' => $mechanic->id,
-                'week_start' => $weekStart,
-                'week_end' => $weekEnd,
-                'exception' => $e
+                'exception' => $e,
             ]);
         }
     }

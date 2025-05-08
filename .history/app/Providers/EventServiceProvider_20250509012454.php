@@ -21,10 +21,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        ServiceStatusChanged::class => [
-            UpdateMechanicReports::class,
-        ],
-        MechanicsAssigned::class => [
+        ServiceUpdated::class => [
             UpdateMechanicReports::class,
         ],
     ];

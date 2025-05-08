@@ -7,7 +7,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class ServiceUpdated
+class MechanicsAssigned
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -19,13 +19,22 @@ class ServiceUpdated
     public $service;
 
     /**
+     * The previous mechanic IDs.
+     *
+     * @var array
+     */
+    public $previousMechanicIds;
+
+    /**
      * Create a new event instance.
      *
      * @param  \App\Models\Service  $service
+     * @param  array  $previousMechanicIds
      * @return void
      */
-    public function __construct(Service $service)
+    public function __construct(Service $service, array $previousMechanicIds = [])
     {
         $this->service = $service;
+        $this->previousMechanicIds = $previousMechanicIds;
     }
 }

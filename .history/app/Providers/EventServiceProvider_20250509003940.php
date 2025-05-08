@@ -2,8 +2,7 @@
 
 namespace App\Providers;
 
-use App\Events\MechanicsAssigned;
-use App\Events\ServiceStatusChanged;
+use App\Events\ServiceUpdated;
 use App\Listeners\UpdateMechanicReports;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -21,10 +20,7 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        ServiceStatusChanged::class => [
-            UpdateMechanicReports::class,
-        ],
-        MechanicsAssigned::class => [
+        ServiceUpdated::class => [
             UpdateMechanicReports::class,
         ],
     ];

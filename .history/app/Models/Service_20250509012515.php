@@ -109,14 +109,8 @@ class Service extends Model
                 $service->customer->updateStatistics();
             }
 
-            // Check if status has changed
-            if ($service->isDirty('status') || $service->wasChanged('status')) {
-                $previousStatus = $service->getOriginal('status');
-                Log::info("Service #{$service->id} status changed from {$previousStatus} to {$service->status}");
-
-                // Dispatch ServiceStatusChanged event
-                event(new ServiceStatusChanged($service, $previousStatus));
-            }
+            // Dispatch ServiceUpdated event
+            event(new ServiceUpdated($service));
         });
 
         // Register event handlers for relationship syncing
@@ -125,26 +119,14 @@ class Service extends Model
             if ($relation === 'mechanics') {
                 $originalMechanics = $service->mechanics()->get();
                 $service->originalMechanicIds = $originalMechanics->pluck('id')->toArray();
-
-                Log::info("Service #{$service->id} syncing mechanics, storing original IDs", [
-                    'original_mechanic_ids' => $service->originalMechanicIds
-                ]);
             }
         });
 
         // Register event handlers for relationship synced
         static::registerModelEvent('synced', function ($service, $relation) {
-            // Dispatch MechanicsAssigned event after relationship is synced
+            // Dispatch ServiceUpdated event after relationship is synced
             if ($relation === 'mechanics') {
-                $currentMechanicIds = $service->mechanics()->pluck('mechanics.id')->toArray();
-
-                Log::info("Service #{$service->id} mechanics synced", [
-                    'original_mechanic_ids' => $service->originalMechanicIds ?? [],
-                    'current_mechanic_ids' => $currentMechanicIds
-                ]);
-
-                // Dispatch MechanicsAssigned event
-                event(new MechanicsAssigned($service, $service->originalMechanicIds ?? []));
+                event(new ServiceUpdated($service));
             }
         });
     }
