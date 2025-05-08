@@ -1036,7 +1036,7 @@ class ServiceResource extends Resource
                                         'exit_time' => $record->exit_time,
                                     ]);
 
-                                    // Simpan perubahan - ini akan memicu event ServiceUpdated
+                                    // Simpan perubahan - ini akan memicu ServiceObserver
                                     $record->save();
                                 }
                             });
@@ -1181,5 +1181,5 @@ class ServiceResource extends Resource
         ];
     }
 
-    // Pembaruan laporan montir sekarang ditangani oleh event ServiceUpdated dan listener UpdateMechanicReports
+    // Metode generateMechanicReports telah dipindahkan ke ServiceObserver
 }

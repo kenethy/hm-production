@@ -30,5 +30,8 @@ class AppServiceProvider extends ServiceProvider
             unset($root, $secure);
             return url($path, [], true);
         };
+
+        // Register observers
+        Service::observe(ServiceObserver::class);
     }
 }

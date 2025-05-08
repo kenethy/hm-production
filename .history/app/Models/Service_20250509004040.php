@@ -130,7 +130,7 @@ class Service extends Model
     }
 
     /**
-     * Store original mechanic IDs before sync
+     * Store original mechanics before sync
      */
-    public $originalMechanicIds = null;
+    public $originalMechanics = null;
 }

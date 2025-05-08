@@ -112,25 +112,26 @@ class Service extends Model
         });
 
         // Register event handlers for relationship syncing
-        static::registerModelEvent('syncing', function ($service, $relation) {
-            // Store original mechanics IDs for use in synced event
-            if ($relation === 'mechanics') {
-                $originalMechanics = $service->mechanics()->get();
-                $service->originalMechanicIds = $originalMechanics->pluck('id')->toArray();
+        static::registerModelEvent('syncing', function ($service, $relation, $properties) {
+            // Dispatch to observer
+            $observer = app(\App\Observers\ServiceObserver::class);
+            if (method_exists($observer, 'syncing')) {
+                $observer->syncing($service, $relation, $properties);
             }
         });
 
         // Register event handlers for relationship synced
-        static::registerModelEvent('synced', function ($service, $relation) {
-            // Dispatch ServiceUpdated event after relationship is synced
-            if ($relation === 'mechanics') {
-                event(new ServiceUpdated($service));
+        static::registerModelEvent('synced', function ($service, $relation, $properties) {
+            // Dispatch to observer
+            $observer = app(\App\Observers\ServiceObserver::class);
+            if (method_exists($observer, 'synced')) {
+                $observer->synced($service, $relation, $properties);
             }
         });
     }
 
     /**
-     * Store original mechanic IDs before sync
+     * Store original mechanics before sync
      */
-    public $originalMechanicIds = null;
+    public $originalMechanics = null;
 }

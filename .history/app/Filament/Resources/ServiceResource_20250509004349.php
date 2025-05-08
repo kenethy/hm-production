@@ -1181,5 +1181,5 @@ class ServiceResource extends Resource
         ];
     }
 
-    // Pembaruan laporan montir sekarang ditangani oleh event ServiceUpdated dan listener UpdateMechanicReports
+    // Metode generateMechanicReports telah dipindahkan ke ServiceObserver
 }
