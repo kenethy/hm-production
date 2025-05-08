@@ -28,7 +28,7 @@ docker exec $CONTAINER_NAME php artisan route:clear
 docker exec $CONTAINER_NAME php artisan view:clear
 
 # Jalankan perintah untuk memperbaiki laporan montir
-echo "Menjalankan perintah regenerate-mechanic-reports..."
-docker exec $CONTAINER_NAME php artisan mechanic:regenerate-reports
+echo "Menjalankan perintah fix-mechanic-reports..."
+docker exec $CONTAINER_NAME php artisan app:fix-mechanic-reports
 
 echo "Selesai! Laporan montir telah diperbaiki."
