@@ -787,15 +787,6 @@ class ServiceResource extends Resource
                                     'week_start' => $weekStart,
                                     'week_end' => $weekEnd,
                                 ]);
-
-                                // Log untuk debugging
-                                \Illuminate\Support\Facades\Log::info("Attached mechanic #{$mechanicId} with default labor_cost: {$defaultLaborCost}", [
-                                    'service_id' => $record->id,
-                                    'mechanic_id' => $mechanicId,
-                                    'labor_cost' => $defaultLaborCost,
-                                    'week_start' => $weekStart,
-                                    'week_end' => $weekEnd,
-                                ]);
                             }
                         }
 
@@ -804,16 +795,10 @@ class ServiceResource extends Resource
                         $record->invoice_number = $data['invoice_number'] ?? null;
                         $record->completed_at = now();
                         $record->exit_time = now();
-
-                        // Log untuk debugging
-                        \Illuminate\Support\Facades\Log::info("Updating service #{$record->id} status to completed", [
-                            'invoice_number' => $record->invoice_number,
-                            'completed_at' => $record->completed_at,
-                            'exit_time' => $record->exit_time,
-                        ]);
-
-                        // Simpan perubahan - ini akan memicu ServiceObserver
                         $record->save();
+
+                        // Generate mechanic reports after all mechanics have been attached
+                        self::generateMechanicReports($record, $weekStart, $weekEnd);
 
                         Notification::make()
                             ->title('Servis telah ditandai sebagai selesai')
@@ -1028,16 +1013,10 @@ class ServiceResource extends Resource
                                     $record->invoice_number = $data['invoice_number'] ?? null;
                                     $record->completed_at = now();
                                     $record->exit_time = now();
-
-                                    // Log untuk debugging
-                                    \Illuminate\Support\Facades\Log::info("Bulk action: Updating service #{$record->id} status to completed", [
-                                        'invoice_number' => $record->invoice_number,
-                                        'completed_at' => $record->completed_at,
-                                        'exit_time' => $record->exit_time,
-                                    ]);
-
-                                    // Simpan perubahan - ini akan memicu ServiceObserver
                                     $record->save();
+
+                                    // Generate mechanic reports after all mechanics have been attached
+                                    self::generateMechanicReports($record, $weekStart, $weekEnd);
                                 }
                             });
 
@@ -1130,6 +1109,9 @@ class ServiceResource extends Resource
                     $mechanic->pivot->week_end = $weekEnd;
                     $mechanic->pivot->save();
                 });
+
+                // Generate mechanic reports after all mechanics have been updated
+                self::generateMechanicReports($form->model, $weekStart, $weekEnd);
             }
         }
 
@@ -1181,5 +1163,87 @@ class ServiceResource extends Resource
         ];
     }
 
-    // Metode generateMechanicReports telah dipindahkan ke ServiceObserver
+    /**
+     * Generate mechanic reports for all mechanics in a service.
+     * This method is called after a service is completed to ensure all mechanic reports are generated.
+     */
+    protected static function generateMechanicReports($service, $weekStart, $weekEnd)
+    {
+        // Get all mechanics for this service
+        $mechanics = $service->mechanics;
+
+        // Log for debugging
+        Log::info("Generating mechanic reports for service #{$service->id} with " . $mechanics->count() . " mechanics");
+        Log::info("Week period: {$weekStart} to {$weekEnd}");
+
+        // Dump service data for debugging
+        Log::info("Service data:", [
+            'id' => $service->id,
+            'status' => $service->status,
+            'labor_cost' => $service->labor_cost,
+            'total_cost' => $service->total_cost,
+            'mechanics_count' => $mechanics->count(),
+        ]);
+
+        // Process each mechanic in a separate transaction
+        foreach ($mechanics as $mechanic) {
+            try {
+                // Log mechanic pivot data
+                $pivotData = $mechanic->pivot;
+                Log::info("Mechanic #{$mechanic->id} pivot data:", [
+                    'labor_cost' => $pivotData->labor_cost,
+                    'week_start' => $pivotData->week_start,
+                    'week_end' => $pivotData->week_end,
+                ]);
+
+                // Verify data in database directly
+                $dbData = \Illuminate\Support\Facades\DB::table('mechanic_service')
+                    ->where('mechanic_id', $mechanic->id)
+                    ->where('service_id', $service->id)
+                    ->first();
+
+                if ($dbData) {
+                    Log::info("Database mechanic_service record:", [
+                        'mechanic_id' => $dbData->mechanic_id,
+                        'service_id' => $dbData->service_id,
+                        'labor_cost' => $dbData->labor_cost,
+                        'week_start' => $dbData->week_start,
+                        'week_end' => $dbData->week_end,
+                    ]);
+                } else {
+                    Log::warning("No mechanic_service record found in database!");
+                }
+
+                // Force refresh mechanic from database to ensure we have latest data
+                $freshMechanic = \App\Models\Mechanic::find($mechanic->id);
+
+                // Generate or update weekly report for this mechanic
+                $report = $freshMechanic->generateWeeklyReport($weekStart, $weekEnd);
+
+                Log::info("Successfully generated report for mechanic #{$mechanic->id} ({$mechanic->name})", [
+                    'report_id' => $report->id,
+                    'services_count' => $report->services_count,
+                    'total_labor_cost' => $report->total_labor_cost,
+                ]);
+
+                // Verify report was saved correctly
+                $savedReport = \App\Models\MechanicReport::find($report->id);
+                Log::info("Saved report data:", [
+                    'id' => $savedReport->id,
+                    'mechanic_id' => $savedReport->mechanic_id,
+                    'week_start' => $savedReport->week_start,
+                    'week_end' => $savedReport->week_end,
+                    'services_count' => $savedReport->services_count,
+                    'total_labor_cost' => $savedReport->total_labor_cost,
+                ]);
+            } catch (\Exception $e) {
+                // Log error but continue with other mechanics
+                Log::error("Error generating report for mechanic #{$mechanic->id}: " . $e->getMessage(), [
+                    'service_id' => $service->id,
+                    'mechanic_id' => $mechanic->id,
+                    'exception' => $e
+                ]);
+            }
+        }
+    }
 }
