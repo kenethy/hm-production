@@ -1143,14 +1143,6 @@ class ServiceResource extends Resource
             }
         }
 
-        // Update mechanic reports if status is completed
-        if ($form->model->status === 'completed' && $form->model->exists) {
-            // Schedule mechanic reports update after save
-            $form->model->afterSave(function ($record) {
-                MechanicReportHelper::updateReports($record);
-            });
-        }
-
         // Process customer and vehicle information
         if ($form->model->phone && $form->model->customer_name) {
             // Check if customer exists with this phone number

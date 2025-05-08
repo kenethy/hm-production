@@ -912,9 +912,6 @@ class ServiceResource extends Resource
                         $record->status = 'cancelled';
                         $record->save();
 
-                        // Update mechanic reports directly
-                        MechanicReportHelper::updateReports($record);
-
                         Notification::make()
                             ->title('Servis telah dibatalkan')
                             ->success()
@@ -1043,11 +1040,8 @@ class ServiceResource extends Resource
                                         'exit_time' => $record->exit_time,
                                     ]);
 
-                                    // Simpan perubahan
+                                    // Simpan perubahan - ini akan memicu event ServiceUpdated
                                     $record->save();
-
-                                    // Update mechanic reports directly
-                                    MechanicReportHelper::updateReports($record);
                                 }
                             });
 
@@ -1141,14 +1135,6 @@ class ServiceResource extends Resource
                     $mechanic->pivot->save();
                 });
             }
-        }
-
-        // Update mechanic reports if status is completed
-        if ($form->model->status === 'completed' && $form->model->exists) {
-            // Schedule mechanic reports update after save
-            $form->model->afterSave(function ($record) {
-                MechanicReportHelper::updateReports($record);
-            });
         }
 
         // Process customer and vehicle information
