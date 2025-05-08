@@ -15,7 +15,7 @@ echo "Menggunakan container: $CONTAINER_NAME"
 
 # 1. Perbaiki model Mechanic.php
 echo "Langkah 1: Memperbaiki model Mechanic.php..."
-bash fix-mechanic-model-simple.sh
+bash fix-mechanic-model.sh
 
 # 2. Perbaiki ServiceResource.php
 echo "Langkah 2: Memperbaiki ServiceResource.php..."

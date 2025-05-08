@@ -15,58 +15,58 @@ echo "Menggunakan container: $CONTAINER_NAME"
 
 # 1. Perbaiki model Mechanic.php
 echo "Langkah 1: Memperbaiki model Mechanic.php..."
-bash fix-mechanic-model-simple.sh
+bash fix-mechanic-model.sh
 
 # 2. Perbaiki ServiceResource.php
 echo "Langkah 2: Memperbaiki ServiceResource.php..."
-bash fix-service-resource-simple.sh
+bash fix-service-resource.sh
 
 # 3. Perbaiki database
 echo "Langkah 3: Memperbaiki database..."
 docker exec $CONTAINER_NAME php artisan tinker --execute="
 try {
     echo 'Memperbaiki tabel mechanic_reports...\\n';
-
+    
     // Cek apakah tabel ada
     if (!Schema::hasTable('mechanic_reports')) {
         echo 'Error: Tabel mechanic_reports tidak ditemukan!\\n';
         exit(1);
     }
-
+    
     // Ambil semua data dari tabel mechanic_reports
     \$reports = DB::table('mechanic_reports')->get();
     echo 'Total laporan: ' . \$reports->count() . '\\n';
-
+    
     // Kelompokkan berdasarkan mechanic_id, week_start, week_end
     \$grouped = \$reports->groupBy(function(\$item) {
         return \$item->mechanic_id . '-' . \$item->week_start . '-' . \$item->week_end;
     });
-
+    
     // Cari grup yang memiliki lebih dari 1 item (duplikat)
     \$duplicates = \$grouped->filter(function(\$group) {
         return \$group->count() > 1;
     });
-
+    
     echo 'Grup duplikat ditemukan: ' . \$duplicates->count() . '\\n';
-
+    
     // Hapus duplikat, simpan hanya yang terbaru
     foreach (\$duplicates as \$key => \$group) {
         echo 'Memproses grup: ' . \$key . '\\n';
-
+        
         // Urutkan berdasarkan ID (tertinggi = terbaru)
         \$sorted = \$group->sortByDesc('id');
-
+        
         // Simpan ID tertinggi
         \$keepId = \$sorted->first()->id;
         echo 'Mempertahankan ID: ' . \$keepId . '\\n';
-
+        
         // Hapus yang lain
         foreach (\$sorted->slice(1) as \$duplicate) {
             echo 'Menghapus ID: ' . \$duplicate->id . '\\n';
             DB::table('mechanic_reports')->where('id', \$duplicate->id)->delete();
         }
     }
-
+    
     echo 'Selesai membersihkan laporan duplikat.\\n';
 } catch (Exception \$e) {
     echo 'Error: ' . \$e->getMessage() . '\\n';
