@@ -142,73 +142,41 @@ class UpdateMechanicReports
             $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
             $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
 
-            Log::info("UpdateMechanicReports: Week dates", [
-                'week_start' => $weekStart,
-                'week_end' => $weekEnd,
-            ]);
-
             // Process each mechanic
             foreach ($mechanics as $mechanic) {
-                try {
-                    Log::info("UpdateMechanicReports: Processing mechanic #{$mechanic->id}", [
-                        'pivot_data' => [
-                            'week_start' => $mechanic->pivot->week_start ?? 'null',
-                            'week_end' => $mechanic->pivot->week_end ?? 'null',
-                            'labor_cost' => $mechanic->pivot->labor_cost ?? 'null',
-                        ],
+                // Update week dates if not set
+                if (empty($mechanic->pivot->week_start) || empty($mechanic->pivot->week_end)) {
+                    Log::info("UpdateMechanicReports: Setting week dates for mechanic #{$mechanic->id}");
+
+                    $service->mechanics()->updateExistingPivot($mechanic->id, [
+                        'week_start' => $weekStart,
+                        'week_end' => $weekEnd,
                     ]);
-
-                    // Update week dates if not set
-                    if (empty($mechanic->pivot->week_start) || empty($mechanic->pivot->week_end)) {
-                        Log::info("UpdateMechanicReports: Setting week dates for mechanic #{$mechanic->id}");
-
-                        $service->mechanics()->updateExistingPivot($mechanic->id, [
-                            'week_start' => $weekStart,
-                            'week_end' => $weekEnd,
-                        ]);
-
-                        // Refresh mechanic to get updated pivot data
-                        $mechanic = Mechanic::find($mechanic->id);
-                        if (!$mechanic) {
-                            Log::error("UpdateMechanicReports: Failed to find mechanic #{$mechanic->id} after updating pivot");
-                            continue;
-                        }
-
-                        // Reload the relationship
-                        $mechanic->load(['services' => function ($query) use ($service) {
-                            $query->where('services.id', $service->id);
-                        }]);
-                    } else {
-                        // Use existing week dates
-                        $weekStart = $mechanic->pivot->week_start;
-                        $weekEnd = $mechanic->pivot->week_end;
-                    }
-
-                    // Check if labor_cost is set
-                    $laborCost = $mechanic->pivot->labor_cost;
-
-                    // If labor_cost is not set or is 0, set a default value
-                    if (empty($laborCost) || $laborCost == 0) {
-                        $defaultLaborCost = 50000; // Default labor cost
-                        Log::info("UpdateMechanicReports: Setting default labor cost for mechanic #{$mechanic->id}: {$defaultLaborCost}");
-
-                        $service->mechanics()->updateExistingPivot($mechanic->id, [
-                            'labor_cost' => $defaultLaborCost,
-                        ]);
-
-                        $laborCost = $defaultLaborCost;
-                    }
-
-                    Log::info("UpdateMechanicReports: Generating report for mechanic #{$mechanic->id} with labor cost {$laborCost}");
-
-                    // Generate or update weekly report for this mechanic
-                    $this->generateOrUpdateReport($mechanic, $weekStart, $weekEnd);
-                } catch (\Exception $e) {
-                    Log::error("UpdateMechanicReports: Error processing mechanic #{$mechanic->id}", [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
+                } else {
+                    // Use existing week dates
+                    $weekStart = $mechanic->pivot->week_start;
+                    $weekEnd = $mechanic->pivot->week_end;
                 }
+
+                // Check if labor_cost is set
+                $laborCost = $mechanic->pivot->labor_cost;
+
+                // If labor_cost is not set or is 0, set a default value
+                if (empty($laborCost) || $laborCost == 0) {
+                    $defaultLaborCost = 50000; // Default labor cost
+                    Log::info("UpdateMechanicReports: Setting default labor cost for mechanic #{$mechanic->id}: {$defaultLaborCost}");
+
+                    $service->mechanics()->updateExistingPivot($mechanic->id, [
+                        'labor_cost' => $defaultLaborCost,
+                    ]);
+
+                    $laborCost = $defaultLaborCost;
+                }
+
+                Log::info("UpdateMechanicReports: Generating report for mechanic #{$mechanic->id} with labor cost {$laborCost}");
+
+                // Generate or update weekly report for this mechanic
+                $this->generateOrUpdateReport($mechanic, $weekStart, $weekEnd);
             }
         });
     }
@@ -305,34 +273,23 @@ class UpdateMechanicReports
         try {
             Log::info("UpdateMechanicReports: Generating report for mechanic #{$mechanic->id} for week {$weekStart} to {$weekEnd}");
 
-            // Validate inputs
-            if (empty($weekStart) || empty($weekEnd)) {
-                Log::error("UpdateMechanicReports: Invalid week dates", [
-                    'mechanic_id' => $mechanic->id,
-                    'week_start' => $weekStart,
-                    'week_end' => $weekEnd,
-                ]);
-                return;
-            }
-
-            // Log SQL query for debugging
-            $query = DB::table('mechanic_service')
+            // Calculate total labor cost for completed services
+            $totalLaborCost = DB::table('mechanic_service')
                 ->join('services', 'mechanic_service.service_id', '=', 'services.id')
                 ->where('mechanic_service.mechanic_id', $mechanic->id)
                 ->where('mechanic_service.week_start', $weekStart)
                 ->where('mechanic_service.week_end', $weekEnd)
-                ->where('services.status', 'completed');
-
-            Log::info("UpdateMechanicReports: SQL Query", [
-                'query' => $query->toSql(),
-                'bindings' => $query->getBindings(),
-            ]);
-
-            // Calculate total labor cost for completed services
-            $totalLaborCost = $query->sum('mechanic_service.labor_cost');
+                ->where('services.status', 'completed')
+                ->sum('mechanic_service.labor_cost');
 
             // Count completed services
-            $servicesCount = $query->count();
+            $servicesCount = DB::table('mechanic_service')
+                ->join('services', 'mechanic_service.service_id', '=', 'services.id')
+                ->where('mechanic_service.mechanic_id', $mechanic->id)
+                ->where('mechanic_service.week_start', $weekStart)
+                ->where('mechanic_service.week_end', $weekEnd)
+                ->where('services.status', 'completed')
+                ->count();
 
             Log::info("UpdateMechanicReports: Calculated for mechanic #{$mechanic->id}: services_count={$servicesCount}, total_labor_cost={$totalLaborCost}");
 
@@ -370,11 +327,7 @@ class UpdateMechanicReports
             }
         } catch (\Exception $e) {
             Log::error("UpdateMechanicReports: Error generating report for mechanic #{$mechanic->id}: " . $e->getMessage(), [
-                'mechanic_id' => $mechanic->id,
-                'week_start' => $weekStart,
-                'week_end' => $weekEnd,
                 'exception' => $e,
-                'trace' => $e->getTraceAsString(),
             ]);
         }
     }

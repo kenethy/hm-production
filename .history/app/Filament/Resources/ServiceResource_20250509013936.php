@@ -821,14 +821,7 @@ class ServiceResource extends Resource
                             'current_status' => $record->status,
                             'previous_status' => 'in_progress',
                         ]);
-
-                        // Make sure the record is fresh from the database
-                        $freshRecord = Service::find($record->id);
-                        if ($freshRecord) {
-                            event(new ServiceStatusChanged($freshRecord, 'in_progress'));
-                        } else {
-                            Log::error("ServiceResource: Failed to find service #{$record->id} in the database");
-                        }
+                        event(new ServiceStatusChanged($record, 'in_progress'));
 
                         Notification::make()
                             ->title('Servis telah ditandai sebagai selesai')
