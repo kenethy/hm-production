@@ -934,24 +934,8 @@ class ServiceResource extends Resource
                         $record->status = 'cancelled';
                         $record->save();
 
-                        // Make sure the record is fresh from the database
-                        $freshRecord = Service::with('mechanics')->find($record->id);
-                        if ($freshRecord) {
-                            Log::info("ServiceResource: Dispatching ServiceStatusChanged event for service #{$freshRecord->id} with mechanics", [
-                                'mechanics_count' => $freshRecord->mechanics->count(),
-                                'mechanics_ids' => $freshRecord->mechanics->pluck('id')->toArray(),
-                            ]);
-
-                            // Dispatch event synchronously
-                            $listener = new \App\Listeners\UpdateMechanicReports();
-                            $event = new ServiceStatusChanged($freshRecord, 'completed');
-                            $listener->handle($event);
-
-                            // Also dispatch through event system for other listeners
-                            event($event);
-                        } else {
-                            Log::error("ServiceResource: Failed to find service #{$record->id} in the database");
-                        }
+                        // Dispatch event to update mechanic reports
+                        event(new ServiceStatusChanged($record, 'completed'));
 
                         Notification::make()
                             ->title('Servis telah dibatalkan')
@@ -1084,24 +1068,8 @@ class ServiceResource extends Resource
                                     // Simpan perubahan
                                     $record->save();
 
-                                    // Make sure the record is fresh from the database
-                                    $freshRecord = Service::with('mechanics')->find($record->id);
-                                    if ($freshRecord) {
-                                        Log::info("ServiceResource: Dispatching ServiceStatusChanged event for service #{$freshRecord->id} with mechanics", [
-                                            'mechanics_count' => $freshRecord->mechanics->count(),
-                                            'mechanics_ids' => $freshRecord->mechanics->pluck('id')->toArray(),
-                                        ]);
-
-                                        // Dispatch event synchronously
-                                        $listener = new \App\Listeners\UpdateMechanicReports();
-                                        $event = new ServiceStatusChanged($freshRecord, 'in_progress');
-                                        $listener->handle($event);
-
-                                        // Also dispatch through event system for other listeners
-                                        event($event);
-                                    } else {
-                                        Log::error("ServiceResource: Failed to find service #{$record->id} in the database");
-                                    }
+                                    // Dispatch event to update mechanic reports
+                                    event(new ServiceStatusChanged($record, 'in_progress'));
                                 }
                             });
 
