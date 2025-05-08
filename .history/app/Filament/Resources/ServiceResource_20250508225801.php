@@ -1100,9 +1100,6 @@ class ServiceResource extends Resource
                     $mechanic->pivot->week_end = $weekEnd;
                     $mechanic->pivot->save();
                 });
-
-                // Generate mechanic reports after all mechanics have been updated
-                self::generateMechanicReports($form->model, $weekStart, $weekEnd);
             }
         }
 

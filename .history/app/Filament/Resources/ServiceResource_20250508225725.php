@@ -1005,9 +1005,6 @@ class ServiceResource extends Resource
                                     $record->completed_at = now();
                                     $record->exit_time = now();
                                     $record->save();
-
-                                    // Generate mechanic reports after all mechanics have been attached
-                                    self::generateMechanicReports($record, $weekStart, $weekEnd);
                                 }
                             });
 
@@ -1100,9 +1097,6 @@ class ServiceResource extends Resource
                     $mechanic->pivot->week_end = $weekEnd;
                     $mechanic->pivot->save();
                 });
-
-                // Generate mechanic reports after all mechanics have been updated
-                self::generateMechanicReports($form->model, $weekStart, $weekEnd);
             }
         }
 
@@ -1152,35 +1146,5 @@ class ServiceResource extends Resource
             'create' => Pages\CreateService::route('/create'),
             'edit' => Pages\EditService::route('/{record}/edit'),
         ];
-    }
-
-    /**
-     * Generate mechanic reports for all mechanics in a service.
-     * This method is called after a service is completed to ensure all mechanic reports are generated.
-     */
-    protected static function generateMechanicReports($service, $weekStart, $weekEnd)
-    {
-        // Get all mechanics for this service
-        $mechanics = $service->mechanics;
-
-        // Log for debugging
-        Log::info("Generating mechanic reports for service #{$service->id} with " . $mechanics->count() . " mechanics");
-
-        // Process each mechanic in a separate transaction
-        foreach ($mechanics as $mechanic) {
-            try {
-                // Generate or update weekly report for this mechanic
-                $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-
-                Log::info("Successfully generated report for mechanic #{$mechanic->id} ({$mechanic->name})");
-            } catch (\Exception $e) {
-                // Log error but continue with other mechanics
-                Log::error("Error generating report for mechanic #{$mechanic->id}: " . $e->getMessage(), [
-                    'service_id' => $service->id,
-                    'mechanic_id' => $mechanic->id,
-                    'exception' => $e
-                ]);
-            }
-        }
     }
 }
