@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\Mechanic;
 use App\Models\MechanicReport;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RegenerateMechanicReports extends Command
