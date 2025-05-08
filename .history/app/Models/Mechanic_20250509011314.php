@@ -189,7 +189,6 @@ class Mechanic extends Model
     public function countWeeklyServices($weekStart, $weekEnd)
     {
         return $this->services()
-            ->where('status', 'completed')
             ->wherePivot('week_start', $weekStart)
             ->wherePivot('week_end', $weekEnd)
             ->count();

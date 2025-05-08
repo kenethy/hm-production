@@ -96,11 +96,9 @@ class Mechanic extends Model
 
         // Log query SQL untuk debugging
         $query = \Illuminate\Support\Facades\DB::table('mechanic_service')
-            ->join('services', 'mechanic_service.service_id', '=', 'services.id')
-            ->where('mechanic_service.mechanic_id', $this->id)
-            ->where('mechanic_service.week_start', $weekStart)
-            ->where('mechanic_service.week_end', $weekEnd)
-            ->where('services.status', 'completed');
+            ->where('mechanic_id', $this->id)
+            ->where('week_start', $weekStart)
+            ->where('week_end', $weekEnd);
 
         \Illuminate\Support\Facades\Log::info("SQL Query: " . $query->toSql());
         \Illuminate\Support\Facades\Log::info("SQL Bindings: ", $query->getBindings());
@@ -189,7 +187,6 @@ class Mechanic extends Model
     public function countWeeklyServices($weekStart, $weekEnd)
     {
         return $this->services()
-            ->where('status', 'completed')
             ->wherePivot('week_start', $weekStart)
             ->wherePivot('week_end', $weekEnd)
             ->count();
