@@ -87,60 +87,6 @@ class ServiceObserver
     }
 
     /**
-     * Handle the Service "saved" event.
-     * This is called after both created and updated events.
-     */
-    public function saved(Service $service): void
-    {
-        // Check if the service is completed
-        if ($service->status === 'completed') {
-            Log::info("Service #{$service->id} is saved and completed, updating mechanic reports");
-
-            // Get all mechanics for this service
-            $mechanics = $service->mechanics;
-
-            if ($mechanics->count() > 0) {
-                Log::info("Service has {$mechanics->count()} mechanics, generating reports");
-
-                // Process in a transaction to ensure consistency
-                DB::transaction(function () use ($service, $mechanics) {
-                    // Get the week start and end dates
-                    $weekStart = now()->startOfWeek();
-                    $weekEnd = now()->endOfWeek();
-
-                    // Update mechanic_service pivot with week dates if not already set
-                    foreach ($mechanics as $mechanic) {
-                        if (empty($mechanic->pivot->week_start) || empty($mechanic->pivot->week_end)) {
-                            Log::info("Updating week dates for mechanic #{$mechanic->id}");
-
-                            $service->mechanics()->updateExistingPivot($mechanic->id, [
-                                'week_start' => $weekStart,
-                                'week_end' => $weekEnd,
-                            ]);
-                        }
-
-                        // Check if labor_cost is set
-                        $laborCost = $mechanic->pivot->labor_cost;
-
-                        // If labor_cost is not set or is 0, set a default value
-                        if (empty($laborCost) || $laborCost == 0) {
-                            $defaultLaborCost = 50000; // Default labor cost
-                            Log::info("Setting default labor cost for mechanic #{$mechanic->id}: {$defaultLaborCost}");
-
-                            $service->mechanics()->updateExistingPivot($mechanic->id, [
-                                'labor_cost' => $defaultLaborCost,
-                            ]);
-                        }
-                    }
-
-                    // Generate reports for all mechanics
-                    $this->generateMechanicReports($service);
-                });
-            }
-        }
-    }
-
-    /**
      * Generate mechanic reports for all mechanics in a service.
      */
     protected function generateMechanicReports($service): void
