@@ -912,8 +912,8 @@ class ServiceResource extends Resource
                         $record->status = 'cancelled';
                         $record->save();
 
-                        // Dispatch event to update mechanic reports
-                        event(new ServiceStatusChanged($record, 'completed'));
+                        // Update mechanic reports directly
+                        MechanicReportHelper::updateReports($record);
 
                         Notification::make()
                             ->title('Servis telah dibatalkan')
@@ -1046,8 +1046,8 @@ class ServiceResource extends Resource
                                     // Simpan perubahan
                                     $record->save();
 
-                                    // Dispatch event to update mechanic reports
-                                    event(new ServiceStatusChanged($record, 'in_progress'));
+                                    // Update mechanic reports directly
+                                    MechanicReportHelper::updateReports($record);
                                 }
                             });
 
@@ -1143,9 +1143,35 @@ class ServiceResource extends Resource
             }
         }
 
-        // We don't need to manually update mechanic reports here anymore
-        // The Service model will automatically dispatch events when status changes
-        // or when mechanics are assigned/removed
+        // Update mechanic reports if status changes
+        if ($form->model->exists) {
+            // Get original model from database
+            $originalModel = Service::find($form->model->id);
+
+            // Check if status has changed
+            $statusChanged = $originalModel && $originalModel->status !== $form->model->status;
+
+            // Log for debugging
+            Log::info("beforeSave: Status check for service #{$form->model->id}", [
+                'original_status' => $originalModel ? $originalModel->status : 'new',
+                'new_status' => $form->model->status,
+                'status_changed' => $statusChanged ? 'Yes' : 'No'
+            ]);
+
+            // Schedule mechanic reports update after save if:
+            // 1. Status is completed, or
+            // 2. Status has changed from completed to something else
+            if (
+                $form->model->status === 'completed' ||
+                ($statusChanged && $originalModel->status === 'completed')
+            ) {
+
+                $form->model->afterSave(function ($record) {
+                    Log::info("afterSave: Updating mechanic reports for service #{$record->id} with status {$record->status}");
+                    MechanicReportHelper::updateReports($record);
+                });
+            }
+        }
 
         // Process customer and vehicle information
         if ($form->model->phone && $form->model->customer_name) {
