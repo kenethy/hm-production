@@ -18,7 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
+
 use Illuminate\Support\Facades\Log;
 
 class ServiceResource extends Resource

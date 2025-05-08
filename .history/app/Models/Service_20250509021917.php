@@ -204,13 +204,7 @@ class Service extends Model
                     // Dispatch MechanicsAssigned event
                     $event = new MechanicsAssigned($service, $service->originalMechanicIds ?? []);
                     DebugHelper::logEventDetails($event);
-
-                    // Dispatch event through event system
                     event($event);
-
-                    // Also run the listener directly to ensure it's processed immediately
-                    $listener = new \App\Listeners\UpdateMechanicReports();
-                    $listener->handle($event);
 
                     // Log queries executed during event dispatch
                     $queries = DB::getQueryLog();
