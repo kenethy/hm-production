@@ -141,9 +141,7 @@ class ServiceObserver
      */
     public function saved(Service $service): void
     {
-        Log::info("Service #{$service->id} saved with status: {$service->status}");
-
-        // Case 1: Service is completed
+        // Check if the service is completed
         if ($service->status === 'completed') {
             Log::info("Service #{$service->id} is saved and completed, updating mechanic reports");
 
@@ -189,43 +187,6 @@ class ServiceObserver
                 });
             }
         }
-        // Case 2: Service is cancelled
-        else if ($service->status === 'cancelled') {
-            Log::info("Service #{$service->id} is saved and cancelled, checking if we need to update mechanic reports");
-
-            // Get all mechanics for this service
-            $mechanics = $service->mechanics;
-
-            if ($mechanics->count() > 0) {
-                Log::info("Service has {$mechanics->count()} mechanics, checking if we need to update reports");
-
-                // Process in a transaction to ensure consistency
-                DB::transaction(function () use ($service, $mechanics) {
-                    // For each mechanic, check if we need to update their report
-                    foreach ($mechanics as $mechanic) {
-                        // Get the week start and end from the pivot
-                        $weekStart = $mechanic->pivot->week_start;
-                        $weekEnd = $mechanic->pivot->week_end;
-
-                        // Check if labor_cost is set
-                        $laborCost = $mechanic->pivot->labor_cost;
-
-                        // If we have week dates and labor_cost, we need to update the report
-                        if ($weekStart && $weekEnd && $laborCost > 0) {
-                            Log::info("Removing service #{$service->id} from mechanic #{$mechanic->id} report for week {$weekStart} to {$weekEnd}");
-
-                            // Set labor_cost to 0 for this service-mechanic relationship
-                            $service->mechanics()->updateExistingPivot($mechanic->id, [
-                                'labor_cost' => 0,
-                            ]);
-
-                            // Generate or update weekly report for this mechanic
-                            $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                        }
-                    }
-                });
-            }
-        }
     }
 
     /**
@@ -235,8 +196,8 @@ class ServiceObserver
     public function syncing($service, $relation, $properties): void
     {
         // Check if the mechanics relationship is being synced
-        if ($relation === 'mechanics') {
-            Log::info("Mechanics relationship is being synced for service #{$service->id} with status {$service->status}");
+        if ($relation === 'mechanics' && $service->status === 'completed') {
+            Log::info("Mechanics relationship is being synced for service #{$service->id}");
 
             // Get the original mechanics before sync
             $originalMechanics = $service->mechanics()->get();
@@ -256,8 +217,8 @@ class ServiceObserver
     public function synced($service, $relation, $properties): void
     {
         // Check if the mechanics relationship was synced
-        if ($relation === 'mechanics') {
-            Log::info("Mechanics relationship has been synced for service #{$service->id} with status {$service->status}");
+        if ($relation === 'mechanics' && $service->status === 'completed') {
+            Log::info("Mechanics relationship has been synced for service #{$service->id}");
 
             // Get the new mechanics after sync
             $newMechanics = $service->mechanics()->get();
@@ -302,43 +263,31 @@ class ServiceObserver
                     foreach ($addedMechanics as $mechanic) {
                         Log::info("Updating report for added mechanic #{$mechanic->id}");
 
-                        // Only update reports if service is completed
-                        if ($service->status === 'completed') {
-                            // Get the week start and end dates
-                            $weekStart = now()->startOfWeek();
-                            $weekEnd = now()->endOfWeek();
+                        // Get the week start and end dates
+                        $weekStart = now()->startOfWeek();
+                        $weekEnd = now()->endOfWeek();
 
-                            // Update mechanic_service pivot with week dates
+                        // Update mechanic_service pivot with week dates
+                        $service->mechanics()->updateExistingPivot($mechanic->id, [
+                            'week_start' => $weekStart,
+                            'week_end' => $weekEnd,
+                        ]);
+
+                        // Check if labor_cost is set
+                        $laborCost = $mechanic->pivot->labor_cost;
+
+                        // If labor_cost is not set or is 0, set a default value
+                        if (empty($laborCost) || $laborCost == 0) {
+                            $defaultLaborCost = 50000; // Default labor cost
+                            Log::info("Setting default labor cost for added mechanic #{$mechanic->id}: {$defaultLaborCost}");
+
                             $service->mechanics()->updateExistingPivot($mechanic->id, [
-                                'week_start' => $weekStart,
-                                'week_end' => $weekEnd,
-                            ]);
-
-                            // Check if labor_cost is set
-                            $laborCost = $mechanic->pivot->labor_cost;
-
-                            // If labor_cost is not set or is 0, set a default value
-                            if (empty($laborCost) || $laborCost == 0) {
-                                $defaultLaborCost = 50000; // Default labor cost
-                                Log::info("Setting default labor cost for added mechanic #{$mechanic->id}: {$defaultLaborCost}");
-
-                                $service->mechanics()->updateExistingPivot($mechanic->id, [
-                                    'labor_cost' => $defaultLaborCost,
-                                ]);
-                            }
-
-                            // Generate or update weekly report for this mechanic
-                            $mechanic->generateWeeklyReport($weekStart, $weekEnd);
-                        }
-                        // If service is cancelled, set labor_cost to 0
-                        else if ($service->status === 'cancelled') {
-                            Log::info("Service is cancelled, setting labor_cost to 0 for added mechanic #{$mechanic->id}");
-
-                            // Set labor_cost to 0 for this service-mechanic relationship
-                            $service->mechanics()->updateExistingPivot($mechanic->id, [
-                                'labor_cost' => 0,
+                                'labor_cost' => $defaultLaborCost,
                             ]);
                         }
+
+                        // Generate or update weekly report for this mechanic
+                        $mechanic->generateWeeklyReport($weekStart, $weekEnd);
                     }
                 });
             }
