@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Filament\Resources\ServiceResource\Pages;
+
+use App\Events\ServiceStatusChanged;
+use App\Filament\Resources\ServiceResource;
+use App\Helpers\DebugHelper;
+use App\Listeners\UpdateMechanicReports;
+use App\Models\Service;
+use Filament\Actions;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class EditService extends EditRecord
+{
+    protected static string $resource = ServiceResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\DeleteAction::make(),
+        ];
+    }
+
+    protected function afterSave(): void
+    {
+        // Add debugging code here
+        $service = $this->record;
+        
+        Log::info("DEBUG_EDIT_SERVICE: Service #{$service->id} saved", [
+            'service_status' => $service->status,
+            'dirty_attributes' => $service->getDirty(),
+            'changed_attributes' => $service->getChanges(),
+            'original_attributes' => $service->getOriginal(),
+        ]);
+        
+        // Log service details before processing
+        DebugHelper::logServiceDetails($service->id);
+        
+        // Enable query logging
+        DB::enableQueryLog();
+        
+        try {
+            // Dispatch event manually
+            $event = new ServiceStatusChanged($service, $service->getOriginal('status'));
+            $listener = new UpdateMechanicReports();
+            
+            Log::info("DEBUG_EDIT_SERVICE: Dispatching event manually", [
+                'event_class' => get_class($event),
+                'listener_class' => get_class($listener),
+            ]);
+            
+            // Handle event
+            $listener->handle($event);
+            
+            // Log queries executed during event handling
+            $queries = DB::getQueryLog();
+            Log::info("DEBUG_EDIT_SERVICE: Queries executed during event handling", [
+                'queries_count' => count($queries),
+                'queries' => $queries,
+            ]);
+            
+            // Log service details after processing
+            DebugHelper::logServiceDetails($service->id);
+            
+            Log::info("DEBUG_EDIT_SERVICE: Event handled successfully");
+        } catch (\Exception $e) {
+            Log::error("DEBUG_EDIT_SERVICE: Error handling event", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        } finally {
+            // Disable query logging
+            DB::disableQueryLog();
+        }
+    }
+}

@@ -20,20 +20,9 @@ class UpdateMechanicReports
     public function handle($event): void
     {
         try {
-            // Enable query logging
-            DB::enableQueryLog();
-
-            // Log event details
-            Log::info("DEBUG_LISTENER: Event received", [
-                'event_class' => get_class($event),
-                'event_data' => json_decode(json_encode($event), true),
-                'memory_usage' => memory_get_usage(true),
-                'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
-            ]);
-
             // Validate event
             if (!($event instanceof ServiceStatusChanged) && !($event instanceof MechanicsAssigned)) {
-                Log::error("DEBUG_LISTENER: Invalid event type", [
+                Log::error("UpdateMechanicReports: Invalid event type", [
                     'event_class' => get_class($event),
                 ]);
                 return;
@@ -43,51 +32,33 @@ class UpdateMechanicReports
 
             // Validate service
             if (!$service) {
-                Log::error("DEBUG_LISTENER: Service is null");
+                Log::error("UpdateMechanicReports: Service is null");
                 return;
             }
 
-            // Log service details before processing
-            DebugHelper::logServiceDetails($service->id);
-
-            Log::info("DEBUG_LISTENER: Handle event started", [
+            Log::info("UpdateMechanicReports: Handle event started", [
                 'event_class' => get_class($event),
                 'service_id' => $service->id,
                 'service_status' => $service->status,
-                'service_data' => json_decode(json_encode($service), true),
             ]);
 
             if ($event instanceof ServiceStatusChanged) {
-                Log::info("DEBUG_LISTENER: Service #{$service->id} status changed from {$event->previousStatus} to {$service->status}");
+                Log::info("UpdateMechanicReports: Service #{$service->id} status changed from {$event->previousStatus} to {$service->status}");
                 $this->handleServiceStatusChanged($service, $event->previousStatus);
             } elseif ($event instanceof MechanicsAssigned) {
-                Log::info("DEBUG_LISTENER: Mechanics assigned to service #{$service->id}");
+                Log::info("UpdateMechanicReports: Mechanics assigned to service #{$service->id}");
                 $this->handleMechanicsAssigned($service, $event->previousMechanicIds);
             }
 
-            // Log queries executed during event handling
-            $queries = DB::getQueryLog();
-            Log::info("DEBUG_LISTENER: Queries executed during event handling", [
-                'queries_count' => count($queries),
-                'queries' => $queries,
-            ]);
-
-            // Log service details after processing
-            DebugHelper::logServiceDetails($service->id);
-
-            Log::info("DEBUG_LISTENER: Handle event completed successfully", [
+            Log::info("UpdateMechanicReports: Handle event completed successfully", [
                 'service_id' => $service->id,
-                'memory_usage' => memory_get_usage(true),
             ]);
         } catch (\Exception $e) {
-            Log::error("DEBUG_LISTENER: Error handling event", [
+            Log::error("UpdateMechanicReports: Error handling event", [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
             // Don't rethrow the exception to prevent the job from failing
-        } finally {
-            // Disable query logging
-            DB::disableQueryLog();
         }
     }
 

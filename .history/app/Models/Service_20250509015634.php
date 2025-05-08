@@ -116,46 +116,8 @@ class Service extends Model
                 $previousStatus = $service->getOriginal('status');
                 Log::info("Service #{$service->id} status changed from {$previousStatus} to {$service->status}");
 
-                // Log detailed information for debugging
-                Log::info("DEBUG_SERVICE_SAVE: Service #{$service->id} status changed", [
-                    'previous_status' => $previousStatus,
-                    'new_status' => $service->status,
-                    'dirty_attributes' => $service->getDirty(),
-                    'changed_attributes' => $service->getChanges(),
-                    'original_attributes' => $service->getOriginal(),
-                    'has_mechanics' => $service->mechanics()->exists(),
-                    'mechanics_count' => $service->mechanics()->count(),
-                    'mechanics_ids' => $service->mechanics()->pluck('mechanics.id')->toArray(),
-                    'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
-                ]);
-
-                try {
-                    // Log database queries
-                    DB::enableQueryLog();
-
-                    // Dispatch ServiceStatusChanged event
-                    $event = new ServiceStatusChanged($service, $previousStatus);
-                    DebugHelper::logEventDetails($event);
-                    event($event);
-
-                    // Log queries executed during event dispatch
-                    $queries = DB::getQueryLog();
-                    Log::info("DEBUG_SERVICE_SAVE: Queries executed during event dispatch", [
-                        'queries_count' => count($queries),
-                        'queries' => $queries,
-                    ]);
-
-                    // Log service details after event dispatch
-                    DebugHelper::logServiceDetails($service->id);
-                } catch (\Exception $e) {
-                    Log::error("DEBUG_SERVICE_SAVE: Error dispatching ServiceStatusChanged event", [
-                        'service_id' => $service->id,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                } finally {
-                    DB::disableQueryLog();
-                }
+                // Dispatch ServiceStatusChanged event
+                event(new ServiceStatusChanged($service, $previousStatus));
             }
         });
 
@@ -183,41 +145,8 @@ class Service extends Model
                     'current_mechanic_ids' => $currentMechanicIds
                 ]);
 
-                // Log detailed information for debugging
-                Log::info("DEBUG_SERVICE_SYNC: Service #{$service->id} mechanics synced", [
-                    'original_mechanic_ids' => $service->originalMechanicIds ?? [],
-                    'current_mechanic_ids' => $currentMechanicIds,
-                    'service_status' => $service->status,
-                    'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5),
-                ]);
-
-                try {
-                    // Log database queries
-                    DB::enableQueryLog();
-
-                    // Dispatch MechanicsAssigned event
-                    $event = new MechanicsAssigned($service, $service->originalMechanicIds ?? []);
-                    DebugHelper::logEventDetails($event);
-                    event($event);
-
-                    // Log queries executed during event dispatch
-                    $queries = DB::getQueryLog();
-                    Log::info("DEBUG_SERVICE_SYNC: Queries executed during event dispatch", [
-                        'queries_count' => count($queries),
-                        'queries' => $queries,
-                    ]);
-
-                    // Log service details after event dispatch
-                    DebugHelper::logServiceDetails($service->id);
-                } catch (\Exception $e) {
-                    Log::error("DEBUG_SERVICE_SYNC: Error dispatching MechanicsAssigned event", [
-                        'service_id' => $service->id,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-                } finally {
-                    DB::disableQueryLog();
-                }
+                // Dispatch MechanicsAssigned event
+                event(new MechanicsAssigned($service, $service->originalMechanicIds ?? []));
             }
         });
     }
