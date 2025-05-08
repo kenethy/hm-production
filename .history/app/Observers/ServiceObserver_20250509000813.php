@@ -95,7 +95,7 @@ class ServiceObserver
      * Handle the Service "synced" event.
      * This is called after a relationship has been synced.
      */
-    public function synced($service, $relation): void
+    public function synced($service, $relation, $_): void
     {
         // Check if the mechanics relationship was synced
         if ($relation === 'mechanics') {

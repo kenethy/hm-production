@@ -22,6 +22,14 @@ class ServiceObserver
     }
 
     /**
+     * Handle the Service "created" event.
+     */
+    public function created(Service $service): void
+    {
+        // No action needed for created event
+    }
+
+    /**
      * Handle the Service "updated" event.
      */
     public function updated(Service $service): void
@@ -51,6 +59,30 @@ class ServiceObserver
     }
 
     /**
+     * Handle the Service "deleted" event.
+     */
+    public function deleted(Service $service): void
+    {
+        //
+    }
+
+    /**
+     * Handle the Service "restored" event.
+     */
+    public function restored(Service $service): void
+    {
+        //
+    }
+
+    /**
+     * Handle the Service "force deleted" event.
+     */
+    public function forceDeleted(Service $service): void
+    {
+        //
+    }
+
+    /**
      * Handle the Service "saved" event.
      * This is called after both created and updated events.
      */
@@ -74,7 +106,7 @@ class ServiceObserver
      * Handle the Service "syncing" event.
      * This is called when a relationship is being synced.
      */
-    public function syncing($service, $relation): void
+    public function syncing($service, $relation, $properties = null): void
     {
         // Check if the mechanics relationship is being synced
         if ($relation === 'mechanics') {
@@ -95,7 +127,7 @@ class ServiceObserver
      * Handle the Service "synced" event.
      * This is called after a relationship has been synced.
      */
-    public function synced($service, $relation): void
+    public function synced($service, $relation, $properties = null): void
     {
         // Check if the mechanics relationship was synced
         if ($relation === 'mechanics') {

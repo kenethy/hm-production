@@ -74,7 +74,7 @@ class ServiceObserver
      * Handle the Service "syncing" event.
      * This is called when a relationship is being synced.
      */
-    public function syncing($service, $relation): void
+    public function syncing($service, $relation, $_): void
     {
         // Check if the mechanics relationship is being synced
         if ($relation === 'mechanics') {
@@ -95,7 +95,7 @@ class ServiceObserver
      * Handle the Service "synced" event.
      * This is called after a relationship has been synced.
      */
-    public function synced($service, $relation): void
+    public function synced($service, $relation, $properties = null): void
     {
         // Check if the mechanics relationship was synced
         if ($relation === 'mechanics') {
