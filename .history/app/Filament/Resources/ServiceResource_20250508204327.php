@@ -195,7 +195,7 @@ class ServiceResource extends Resource
                             ->tel()
                             ->maxLength(20)
                             ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 if ($state) {
                                     // Cari pelanggan berdasarkan nomor telepon
                                     $customer = Customer::where('phone', $state)->first();
@@ -220,12 +220,14 @@ class ServiceResource extends Resource
                                         // Jika pelanggan tidak ditemukan, reset field customer_id
                                         $set('customer_id', null);
 
-                                        // Beri tahu user bahwa pelanggan baru akan dibuat
-                                        Notification::make()
-                                            ->title('Pelanggan baru')
-                                            ->body('Pelanggan dengan nomor telepon ini belum terdaftar. Silakan isi nama pelanggan.')
-                                            ->info()
-                                            ->send();
+                                        // Jika customer_name kosong, beri tahu user bahwa pelanggan baru akan dibuat
+                                        if (empty($get('customer_name'))) {
+                                            Notification::make()
+                                                ->title('Pelanggan baru')
+                                                ->body('Pelanggan dengan nomor telepon ini belum terdaftar. Silakan isi nama pelanggan.')
+                                                ->info()
+                                                ->send();
+                                        }
                                     }
                                 }
                             }),

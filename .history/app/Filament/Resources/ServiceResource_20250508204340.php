@@ -195,7 +195,7 @@ class ServiceResource extends Resource
                             ->tel()
                             ->maxLength(20)
                             ->reactive()
-                            ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            ->afterStateUpdated(function ($state, Forms\Set $set, Forms\Get $get) {
                                 if ($state) {
                                     // Cari pelanggan berdasarkan nomor telepon
                                     $customer = Customer::where('phone', $state)->first();
