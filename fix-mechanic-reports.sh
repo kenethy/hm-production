@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Membuat laporan montir mingguan..."
+echo "Memperbaiki laporan montir..."
 
 # Cek apakah docker-compose berjalan
 if ! docker ps | grep -q "app\|laravel\|php"; then
@@ -24,9 +24,11 @@ echo "Menggunakan container: $CONTAINER_NAME"
 echo "Membersihkan cache Laravel..."
 docker exec $CONTAINER_NAME php artisan cache:clear
 docker exec $CONTAINER_NAME php artisan config:clear
+docker exec $CONTAINER_NAME php artisan route:clear
+docker exec $CONTAINER_NAME php artisan view:clear
 
-# Jalankan perintah untuk membuat laporan montir
-echo "Menjalankan perintah generate-mechanic-reports..."
-docker exec $CONTAINER_NAME php artisan app:generate-mechanic-reports
+# Jalankan perintah untuk memperbaiki laporan montir
+echo "Menjalankan perintah fix-mechanic-reports..."
+docker exec $CONTAINER_NAME php artisan app:fix-mechanic-reports
 
-echo "Selesai! Laporan montir mingguan telah dibuat."
+echo "Selesai! Laporan montir telah diperbaiki."
