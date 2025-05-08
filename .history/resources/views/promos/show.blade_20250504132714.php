@@ -226,7 +226,7 @@
                     </svg>
                     BOOKING SEKARANG
                 </a>
-                <a href="https://wa.me/6281235202581" target="_blank" class="bg-green-500 text-white hover:bg-green-600 font-bold py-3 px-8 rounded-full inline-flex items-center justify-center">
+                <a href="https://wa.me/6281234567890" target="_blank" class="bg-green-500 text-white hover:bg-green-600 font-bold py-3 px-8 rounded-full inline-flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
                     </svg>
