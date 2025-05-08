@@ -212,12 +212,6 @@ class Mechanic extends Model
 
         \Illuminate\Support\Facades\Log::info("Week period: {$weekStart} to {$weekEnd}");
 
-        // Refresh mechanic data from database to ensure we have the latest
-        $this->refresh();
-
-        // Verify mechanic exists and is active
-        \Illuminate\Support\Facades\Log::info("Mechanic data: ID={$this->id}, Name={$this->name}, Active=" . ($this->is_active ? 'Yes' : 'No'));
-
         // Use a database transaction with locking to prevent race conditions
         return \Illuminate\Support\Facades\DB::transaction(function () use ($weekStart, $weekEnd) {
             try {
@@ -227,67 +221,11 @@ class Mechanic extends Model
 
                 \Illuminate\Support\Facades\Log::info("Services count: {$servicesCount}, Total labor cost: {$totalLaborCost}");
 
-                // Format dates for database query
-                $dbWeekStart = $weekStart->format('Y-m-d');
-                $dbWeekEnd = $weekEnd->format('Y-m-d');
-
-                \Illuminate\Support\Facades\Log::info("Formatted dates for DB: {$dbWeekStart} to {$dbWeekEnd}");
-
-                // Check if we have any services with labor costs for this week
-                $hasServices = \Illuminate\Support\Facades\DB::table('mechanic_service')
-                    ->where('mechanic_id', $this->id)
-                    ->where('week_start', $dbWeekStart)
-                    ->where('week_end', $dbWeekEnd)
-                    ->where('labor_cost', '>', 0)
-                    ->exists();
-
-                \Illuminate\Support\Facades\Log::info("Has services with labor costs: " . ($hasServices ? 'Yes' : 'No'));
-
-                // If we don't have any services with labor costs, check if we have any completed services
-                if (!$hasServices && $totalLaborCost == 0) {
-                    $completedServices = $this->services()
-                        ->where('status', 'completed')
-                        ->get();
-
-                    if ($completedServices->count() > 0) {
-                        \Illuminate\Support\Facades\Log::info("Found {$completedServices->count()} completed services");
-
-                        // Calculate total labor cost from completed services
-                        $totalFromCompleted = 0;
-                        foreach ($completedServices as $service) {
-                            $laborCost = (float) $service->pivot->labor_cost;
-                            $totalFromCompleted += $laborCost;
-                        }
-
-                        if ($totalFromCompleted > 0) {
-                            $totalLaborCost = $totalFromCompleted;
-                            $servicesCount = $completedServices->count();
-                            \Illuminate\Support\Facades\Log::info("Using total from completed services: {$totalLaborCost}");
-                        }
-                    }
-                }
-
-                // If we still don't have any labor costs, check if there are any mechanic_service records at all
-                if ($totalLaborCost == 0) {
-                    $allServices = \Illuminate\Support\Facades\DB::table('mechanic_service')
-                        ->where('mechanic_id', $this->id)
-                        ->get();
-
-                    \Illuminate\Support\Facades\Log::info("Found {$allServices->count()} total mechanic_service records");
-
-                    // If we have services but no labor costs, use a default value
-                    if ($allServices->count() > 0) {
-                        $totalLaborCost = 50000 * $allServices->count(); // Default 50,000 per service
-                        $servicesCount = $allServices->count();
-                        \Illuminate\Support\Facades\Log::info("Using default labor cost: {$totalLaborCost}");
-                    }
-                }
-
                 // Lock the mechanic_reports table for this mechanic and week to prevent concurrent modifications
                 // Use FOR UPDATE to lock the row if it exists
                 $existingReport = \App\Models\MechanicReport::where('mechanic_id', $this->id)
-                    ->where('week_start', $dbWeekStart)
-                    ->where('week_end', $dbWeekEnd)
+                    ->where('week_start', $weekStart)
+                    ->where('week_end', $weekEnd)
                     ->lockForUpdate()
                     ->first();
 
@@ -308,8 +246,8 @@ class Mechanic extends Model
 
                     // Double-check that the report doesn't exist (extra safety)
                     $checkAgain = \App\Models\MechanicReport::where('mechanic_id', $this->id)
-                        ->where('week_start', $dbWeekStart)
-                        ->where('week_end', $dbWeekEnd)
+                        ->where('week_start', $weekStart)
+                        ->where('week_end', $weekEnd)
                         ->first();
 
                     if ($checkAgain) {
@@ -326,8 +264,8 @@ class Mechanic extends Model
                     // Create new report
                     $report = new \App\Models\MechanicReport();
                     $report->mechanic_id = $this->id;
-                    $report->week_start = $dbWeekStart;
-                    $report->week_end = $dbWeekEnd;
+                    $report->week_start = $weekStart;
+                    $report->week_end = $weekEnd;
                     $report->services_count = $servicesCount;
                     $report->total_labor_cost = $totalLaborCost;
                     $report->save();
