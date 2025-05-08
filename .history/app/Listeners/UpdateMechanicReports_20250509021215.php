@@ -342,7 +342,6 @@ class UpdateMechanicReports
             foreach ($mechanicsData as $mechanicData) {
                 $weekStart = $mechanicData->week_start;
                 $weekEnd = $mechanicData->week_end;
-                $currentLaborCost = $mechanicData->labor_cost;
 
                 if (empty($weekStart) || empty($weekEnd)) {
                     continue;
@@ -355,42 +354,10 @@ class UpdateMechanicReports
                     continue;
                 }
 
-                Log::info("UpdateMechanicReports: Current labor cost for mechanic #{$mechanic->id} on service #{$service->id}: {$currentLaborCost}");
+                Log::info("UpdateMechanicReports: Updating report for removed mechanic #{$mechanic->id}");
 
-                // Get the current report
-                $report = DB::table('mechanic_reports')
-                    ->where('mechanic_id', $mechanic->id)
-                    ->where('week_start', $weekStart)
-                    ->where('week_end', $weekEnd)
-                    ->first();
-
-                if ($report) {
-                    // Calculate new total labor cost by subtracting the current labor cost
-                    $newTotalLaborCost = max(0, $report->total_labor_cost - $currentLaborCost);
-                    $newServicesCount = max(0, $report->services_count - 1);
-
-                    Log::info("UpdateMechanicReports: Updating report for removed mechanic #{$mechanic->id}", [
-                        'report_id' => $report->id,
-                        'current_total_labor_cost' => $report->total_labor_cost,
-                        'current_services_count' => $report->services_count,
-                        'labor_cost_to_subtract' => $currentLaborCost,
-                        'new_total_labor_cost' => $newTotalLaborCost,
-                        'new_services_count' => $newServicesCount,
-                    ]);
-
-                    // Update the report
-                    DB::table('mechanic_reports')
-                        ->where('id', $report->id)
-                        ->update([
-                            'services_count' => $newServicesCount,
-                            'total_labor_cost' => $newTotalLaborCost,
-                            'updated_at' => now(),
-                        ]);
-
-                    Log::info("UpdateMechanicReports: Updated report #{$report->id} for mechanic #{$mechanic->id}");
-                } else {
-                    Log::info("UpdateMechanicReports: No report found for mechanic #{$mechanic->id} for week {$weekStart} to {$weekEnd}");
-                }
+                // Update the report
+                $this->generateOrUpdateReport($mechanic, $weekStart, $weekEnd);
             }
         });
     }
