@@ -41,11 +41,11 @@ class ServicesRelationManager extends RelationManager
                     ->label('Nomor Plat')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('invoice_number')
+                Tables\Columns\TextColumn::make('pivot.invoice_number')
                     ->label('Nomor Nota')
                     ->searchable(),
 
-                Tables\Columns\TextColumn::make('labor_cost')
+                Tables\Columns\TextColumn::make('pivot.labor_cost')
                     ->label('Biaya Jasa')
                     ->money('IDR')
                     ->sortable(),
@@ -92,19 +92,6 @@ class ServicesRelationManager extends RelationManager
             ])
             ->bulkActions([
                 // No bulk actions needed
-            ])
-            ->modifyQueryUsing(function (Builder $query) {
-                $mechanicId = $this->getOwnerRecord()->mechanic_id;
-                $weekStart = $this->getOwnerRecord()->week_start;
-                $weekEnd = $this->getOwnerRecord()->week_end;
-
-                return $query->join('mechanic_service', function ($join) use ($mechanicId, $weekStart, $weekEnd) {
-                    $join->on('mechanic_service.service_id', '=', 'services.id')
-                        ->where('mechanic_service.mechanic_id', '=', $mechanicId)
-                        ->where('mechanic_service.week_start', '=', $weekStart)
-                        ->where('mechanic_service.week_end', '=', $weekEnd);
-                })
-                    ->select('services.*', 'mechanic_service.invoice_number', 'mechanic_service.labor_cost');
-            });
+            ]);
     }
 }

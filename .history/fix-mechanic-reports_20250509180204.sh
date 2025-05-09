@@ -26,12 +26,6 @@ docker exec $CONTAINER_NAME php artisan cache:clear
 docker exec $CONTAINER_NAME php artisan config:clear
 docker exec $CONTAINER_NAME php artisan route:clear
 docker exec $CONTAINER_NAME php artisan view:clear
-docker exec $CONTAINER_NAME php artisan livewire:discover
-
-# Optimize the application
-echo "Optimizing application..."
-docker exec $CONTAINER_NAME php artisan optimize:clear
-docker exec $CONTAINER_NAME php artisan optimize
 
 # Jalankan perintah untuk memperbaiki laporan montir
 echo "Menjalankan perintah regenerate-mechanic-reports..."
@@ -66,4 +60,3 @@ fi
 
 echo "Selesai! Laporan montir telah diperbaiki."
 echo "Sekarang biaya jasa seharusnya ditampilkan dengan benar di laporan montir."
-echo "Fitur riwayat servis montir juga telah diperbaiki."

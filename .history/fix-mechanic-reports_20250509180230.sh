@@ -66,4 +66,3 @@ fi
 
 echo "Selesai! Laporan montir telah diperbaiki."
 echo "Sekarang biaya jasa seharusnya ditampilkan dengan benar di laporan montir."
-echo "Fitur riwayat servis montir juga telah diperbaiki."

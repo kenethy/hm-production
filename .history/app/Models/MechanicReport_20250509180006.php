@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Service;
 
 class MechanicReport extends Model
 {
@@ -76,18 +78,10 @@ class MechanicReport extends Model
     }
 
     /**
-     * Get the mechanic's services for this report period.
-     * This is a helper method, not a relationship.
+     * Get the services for this mechanic report.
      */
-    public function getServicesForPeriod()
+    public function services(): HasMany
     {
-        if (!$this->mechanic) {
-            return collect();
-        }
-
-        return $this->mechanic->services()
-            ->wherePivot('week_start', $this->week_start)
-            ->wherePivot('week_end', $this->week_end)
-            ->get();
+        return $this->hasMany(Service::class, 'mechanic_id', 'mechanic_id');
     }
 }

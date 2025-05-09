@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class MechanicReport extends Model
 {
@@ -76,18 +77,22 @@ class MechanicReport extends Model
     }
 
     /**
-     * Get the mechanic's services for this report period.
-     * This is a helper method, not a relationship.
+     * Get the services for this mechanic report.
+     * This is a custom relationship that gets services through the mechanic.
      */
-    public function getServicesForPeriod()
+    public function services()
     {
-        if (!$this->mechanic) {
-            return collect();
+        // First get the mechanic
+        $mechanic = $this->mechanic;
+
+        if (!$mechanic) {
+            // Return an empty collection if no mechanic is found
+            return Service::whereRaw('1 = 0');
         }
 
-        return $this->mechanic->services()
+        // Then get the services for this mechanic within the specific week
+        return $mechanic->services()
             ->wherePivot('week_start', $this->week_start)
-            ->wherePivot('week_end', $this->week_end)
-            ->get();
+            ->wherePivot('week_end', $this->week_end);
     }
 }
