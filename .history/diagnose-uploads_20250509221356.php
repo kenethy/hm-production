@@ -3,8 +3,8 @@
 // Script to diagnose file upload issues
 
 // Load Laravel
-require __DIR__ . '/vendor/autoload.php';
-$app = require_once __DIR__ . '/bootstrap/app.php';
+require __DIR__.'/vendor/autoload.php';
+$app = require_once __DIR__.'/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 $response = $kernel->handle($request = Illuminate\Http\Request::capture());
 
@@ -55,31 +55,23 @@ foreach ($directories as $name => $path) {
     $exists = file_exists($path);
     $writable = $exists && is_writable($path);
     $permissions = $exists ? substr(sprintf('%o', fileperms($path)), -4) : 'N/A';
-
+    
     echo "$name:\n";
     echo "  Path: $path\n";
     echo "  Exists: " . ($exists ? 'Yes' : 'No') . "\n";
     echo "  Writable: " . ($writable ? 'Yes' : 'No') . "\n";
     echo "  Permissions: $permissions\n";
-
+    
     if (!$exists) {
         echo "  Creating directory...\n";
-        try {
-            mkdir($path, 0777, true);
-            echo "  Directory created with permissions 0777\n";
-        } catch (Exception $e) {
-            echo "  Error creating directory: " . $e->getMessage() . "\n";
-        }
+        mkdir($path, 0777, true);
+        echo "  Directory created with permissions 0777\n";
     } elseif (!$writable) {
         echo "  Setting writable permissions...\n";
-        try {
-            chmod($path, 0777);
-            echo "  Permissions set to 0777\n";
-        } catch (Exception $e) {
-            echo "  Error setting permissions: " . $e->getMessage() . "\n";
-        }
+        chmod($path, 0777);
+        echo "  Permissions set to 0777\n";
     }
-
+    
     echo "\n";
 }
 
