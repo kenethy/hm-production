@@ -14,7 +14,7 @@ class EditService extends EditRecord
 {
     protected static string $resource = ServiceResource::class;
 
-    public function mount($record): void
+    protected function mount($record): void
     {
         parent::mount($record);
 
