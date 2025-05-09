@@ -178,21 +178,6 @@ class EditService extends EditRecord
                             'week_start' => $weekStart,
                             'week_end' => $weekEnd,
                         ]);
-
-                        // Update total biaya jasa pada service
-                        $totalLaborCost = 0;
-                        foreach ($formData['mechanic_costs'] as $cost) {
-                            if (isset($cost['labor_cost'])) {
-                                $totalLaborCost += (int)$cost['labor_cost'];
-                            }
-                        }
-
-                        // Update total biaya
-                        $service->labor_cost = $totalLaborCost;
-                        $service->total_cost = $totalLaborCost;
-                        $service->save();
-
-                        Log::info("EditService: Updated total labor cost for service #{$service->id} to {$totalLaborCost}");
                     }
                 }
 

@@ -492,20 +492,6 @@ class ServiceResource extends Resource
 
                                             $set('mechanic_costs', $mechanicCosts);
                                             Log::info("Set mechanic costs:", $mechanicCosts);
-
-                                            // Hitung total biaya jasa
-                                            $totalLaborCost = 0;
-                                            foreach ($mechanicCosts as $cost) {
-                                                if (isset($cost['labor_cost'])) {
-                                                    $totalLaborCost += (int)$cost['labor_cost'];
-                                                }
-                                            }
-
-                                            // Update total biaya
-                                            $set('labor_cost', $totalLaborCost);
-                                            $set('total_cost', $totalLaborCost);
-
-                                            Log::info("Updated total labor cost to {$totalLaborCost}");
                                         }
                                     }
                                 }

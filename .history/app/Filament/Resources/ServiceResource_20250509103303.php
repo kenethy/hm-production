@@ -492,20 +492,6 @@ class ServiceResource extends Resource
 
                                             $set('mechanic_costs', $mechanicCosts);
                                             Log::info("Set mechanic costs:", $mechanicCosts);
-
-                                            // Hitung total biaya jasa
-                                            $totalLaborCost = 0;
-                                            foreach ($mechanicCosts as $cost) {
-                                                if (isset($cost['labor_cost'])) {
-                                                    $totalLaborCost += (int)$cost['labor_cost'];
-                                                }
-                                            }
-
-                                            // Update total biaya
-                                            $set('labor_cost', $totalLaborCost);
-                                            $set('total_cost', $totalLaborCost);
-
-                                            Log::info("Updated total labor cost to {$totalLaborCost}");
                                         }
                                     }
                                 }
@@ -1344,9 +1330,6 @@ class ServiceResource extends Resource
         $form->model->labor_cost = $totalLaborCost;
         $form->model->parts_cost = 0; // Tidak lagi menggunakan parts_cost
         $form->model->total_cost = $totalLaborCost;
-
-        // Log untuk debugging
-        Log::info("ServiceResource: Setting total_cost to {$totalLaborCost}");
 
         // Jika ini adalah record baru, set entry_time ke waktu saat ini
         if (!$form->model->exists && !$form->model->entry_time) {

@@ -54,12 +54,9 @@ class EditService extends EditRecord
             foreach ($service->mechanics as $mechanic) {
                 $laborCost = $mechanic->pivot->labor_cost;
 
-                // Pastikan labor_cost tidak 0, tapi jangan override nilai yang sudah diisi
+                // Pastikan labor_cost tidak 0
                 if (empty($laborCost) || $laborCost == 0) {
                     $laborCost = 50000; // Default labor cost
-                } else {
-                    // Gunakan nilai yang sudah diisi
-                    Log::info("EditService: Using existing labor cost for mechanic #{$mechanic->id}: {$laborCost}");
                 }
 
                 $mechanicCosts[] = [
@@ -100,12 +97,9 @@ class EditService extends EditRecord
             foreach ($service->mechanics as $mechanic) {
                 $laborCost = $mechanic->pivot->labor_cost;
 
-                // Pastikan labor_cost tidak 0, tapi jangan override nilai yang sudah diisi
+                // Pastikan labor_cost tidak 0
                 if (empty($laborCost) || $laborCost == 0) {
                     $laborCost = 50000; // Default labor cost
-                } else {
-                    // Gunakan nilai yang sudah diisi
-                    Log::info("EditService: Using existing labor cost for mechanic #{$mechanic->id}: {$laborCost}");
                 }
 
                 $mechanicCosts[] = [
@@ -178,21 +172,6 @@ class EditService extends EditRecord
                             'week_start' => $weekStart,
                             'week_end' => $weekEnd,
                         ]);
-
-                        // Update total biaya jasa pada service
-                        $totalLaborCost = 0;
-                        foreach ($formData['mechanic_costs'] as $cost) {
-                            if (isset($cost['labor_cost'])) {
-                                $totalLaborCost += (int)$cost['labor_cost'];
-                            }
-                        }
-
-                        // Update total biaya
-                        $service->labor_cost = $totalLaborCost;
-                        $service->total_cost = $totalLaborCost;
-                        $service->save();
-
-                        Log::info("EditService: Updated total labor cost for service #{$service->id} to {$totalLaborCost}");
                     }
                 }
 
