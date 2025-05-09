@@ -1,109 +1,92 @@
 #!/bin/bash
-# fix-app-direct-approach.sh - Script untuk memperbaiki aplikasi dengan pendekatan langsung
+# recreate-edit-service.sh - Script untuk membuat ulang file EditService.php dengan versi terbaru
 
 # Warna untuk output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Memulai perbaikan aplikasi dengan pendekatan langsung...${NC}\n"
+# Path file
+EDIT_SERVICE_PATH="app/Filament/Resources/ServiceResource/Pages/EditService.php"
+BACKUP_DIR="app/Filament/Resources/ServiceResource/Pages/backups"
+BACKUP_FILE="${BACKUP_DIR}/EditService.php.bak.$(date +%Y%m%d%H%M%S)"
 
-# 1. Hentikan semua container
-echo -e "${YELLOW}1. Menghentikan semua container...${NC}"
-docker-compose down
-if [ $? -ne 0 ]; then
-  echo -e "   ${RED}✗${NC} Gagal menghentikan semua container"
-  echo -e "   ${YELLOW}!${NC} Melanjutkan proses..."
+echo -e "${YELLOW}Memulai pembuatan ulang file EditService.php...${NC}\n"
+
+# 1. Buat direktori backup jika belum ada
+echo -e "${YELLOW}1. Membuat direktori backup...${NC}"
+mkdir -p "$BACKUP_DIR"
+echo -e "   ${GREEN}✓${NC} Direktori backup berhasil dibuat"
+
+# 2. Backup file asli
+echo -e "\n${YELLOW}2. Membuat backup file asli...${NC}"
+if [ -f "$EDIT_SERVICE_PATH" ]; then
+    cp "$EDIT_SERVICE_PATH" "$BACKUP_FILE"
+    echo -e "   ${GREEN}✓${NC} File asli berhasil dibackup ke $BACKUP_FILE"
 else
-  echo -e "   ${GREEN}✓${NC} Semua container berhasil dihentikan"
+    echo -e "   ${RED}✗${NC} File asli tidak ditemukan"
 fi
 
-# 2. Hapus semua file cadangan dengan perintah find
-echo -e "\n${YELLOW}2. Menghapus semua file cadangan...${NC}"
-find app -type f -name "*.php*" | grep -v ".php$" | xargs rm -f
-echo -e "   ${GREEN}✓${NC} Semua file cadangan berhasil dihapus"
+# 3. Buat file EditService.php baru
+echo -e "\n${YELLOW}3. Membuat file EditService.php baru...${NC}"
 
-# 3. Verifikasi penghapusan
-echo -e "\n${YELLOW}3. Memverifikasi penghapusan...${NC}"
-REMAINING_FILES=$(find app -type f -name "*.php*" | grep -v ".php$")
-if [ -z "$REMAINING_FILES" ]; then
-  echo -e "   ${GREEN}✓${NC} Semua file cadangan berhasil dihapus"
-else
-  echo -e "   ${RED}✗${NC} Masih ada file cadangan yang tersisa:"
-  echo "$REMAINING_FILES"
-  echo -e "   ${YELLOW}!${NC} Mencoba menghapus file-file tersebut dengan perintah lain..."
-  
-  for file in $REMAINING_FILES; do
-    echo -e "   ${YELLOW}Menghapus${NC} $file dengan perintah lain"
-    rm -f "$file"
-    if [ $? -ne 0 ]; then
-      echo -e "   ${RED}✗${NC} Gagal menghapus $file"
-    else
-      echo -e "   ${GREEN}✓${NC} Berhasil menghapus $file"
-    fi
-  done
-fi
-
-# 4. Perbaiki file EditService.php
-echo -e "\n${YELLOW}4. Memperbaiki file EditService.php...${NC}"
-cat > app/Filament/Resources/ServiceResource/Pages/EditService.php << 'EOL'
+cat > "$EDIT_SERVICE_PATH" << 'EOL'
 <?php
 
 namespace App\Filament\Resources\ServiceResource\Pages;
 
 use App\Filament\Resources\ServiceResource;
-use App\Models\Mechanic;
 use Filament\Actions;
-use Filament\Forms;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Facades\Log;
+use Filament\Notifications\Notification;
 
 class EditService extends EditRecord
 {
     protected static string $resource = ServiceResource::class;
-
+    
     public function mount($record): void
     {
         parent::mount($record);
-
+        
         // Log untuk debugging
         Log::info("EditService: Mounting edit page for service #{$record->id}");
-
+        
         // Pastikan mechanic_costs diisi dengan benar
         $this->fillMechanicCosts();
     }
-
+    
     protected function fillMechanicCosts(): void
     {
         // Ambil data service
         $service = $this->record;
-
+        
         // Jika tidak ada service, keluar
         if (!$service) {
             return;
         }
-
+        
         // Log untuk debugging
         Log::info("EditService: Filling mechanic costs for service #{$service->id}");
-
+        
         // Ambil data form saat ini
         $data = $this->data;
-
+        
         // Jika mechanic_costs sudah diisi, keluar
         if (isset($data['mechanic_costs']) && is_array($data['mechanic_costs']) && !empty($data['mechanic_costs'])) {
             Log::info("EditService: Mechanic costs already filled", $data['mechanic_costs']);
             return;
         }
-
+        
         // Siapkan mechanic_costs berdasarkan montir yang ada di database
         if ($service->mechanics()->count() > 0) {
             $mechanicCosts = [];
-
+            
             foreach ($service->mechanics as $mechanic) {
                 $laborCost = $mechanic->pivot->labor_cost;
-
+                
                 // Pastikan labor_cost tidak 0, tapi jangan override nilai yang sudah diisi
                 if (empty($laborCost) || $laborCost == 0) {
                     $laborCost = 50000; // Default labor cost
@@ -111,45 +94,45 @@ class EditService extends EditRecord
                     // Gunakan nilai yang sudah diisi
                     Log::info("EditService: Using existing labor cost for mechanic #{$mechanic->id}: {$laborCost}");
                 }
-
+                
                 $mechanicCosts[] = [
                     'mechanic_id' => $mechanic->id,
                     'labor_cost' => $laborCost,
                 ];
             }
-
+            
             // Log mechanic_costs yang akan diisi ke form
             Log::info("EditService: Setting mechanic costs in mount", $mechanicCosts);
-
+            
             // Tambahkan mechanic_costs ke data
             $data['mechanic_costs'] = $mechanicCosts;
-
+            
             // Pastikan mechanics juga diisi dengan benar
             if (!isset($data['mechanics']) || !is_array($data['mechanics']) || empty($data['mechanics'])) {
                 $data['mechanics'] = $service->mechanics()->pluck('mechanic_id')->toArray();
                 Log::info("EditService: Setting mechanics in mount", $data['mechanics']);
             }
-
+            
             // Update data form
             $this->form->fill($data);
         }
     }
-
+    
     protected function mutateFormDataBeforeFill(array $data): array
     {
         // Log data yang akan diisi ke form
         Log::info("EditService: Form data before fill", $data);
-
+        
         // Ambil data service
         $service = $this->record;
-
+        
         // Siapkan mechanic_costs berdasarkan montir yang ada di database
         if ($service && $service->mechanics()->count() > 0) {
             $mechanicCosts = [];
-
+            
             foreach ($service->mechanics as $mechanic) {
                 $laborCost = $mechanic->pivot->labor_cost;
-
+                
                 // Pastikan labor_cost tidak 0, tapi jangan override nilai yang sudah diisi
                 if (empty($laborCost) || $laborCost == 0) {
                     $laborCost = 50000; // Default labor cost
@@ -157,110 +140,29 @@ class EditService extends EditRecord
                     // Gunakan nilai yang sudah diisi
                     Log::info("EditService: Using existing labor cost for mechanic #{$mechanic->id}: {$laborCost}");
                 }
-
+                
                 $mechanicCosts[] = [
                     'mechanic_id' => $mechanic->id,
                     'labor_cost' => $laborCost,
                 ];
             }
-
+            
             // Log mechanic_costs yang akan diisi ke form
             Log::info("EditService: Mechanic costs data from database", $mechanicCosts);
-
+            
             // Tambahkan mechanic_costs ke data
             $data['mechanic_costs'] = $mechanicCosts;
-
+            
             // Pastikan mechanics juga diisi dengan benar
             if (!isset($data['mechanics']) || !is_array($data['mechanics']) || empty($data['mechanics'])) {
                 $data['mechanics'] = $service->mechanics()->pluck('mechanic_id')->toArray();
                 Log::info("EditService: Setting mechanics from database", $data['mechanics']);
             }
         }
-
+        
         return $data;
     }
-
-    protected function afterSave(): void
-    {
-        // Ambil data service yang baru disimpan
-        $service = $this->record;
-
-        // Log untuk debugging
-        Log::info("EditService: After save for service #{$service->id}", [
-            'status' => $service->status,
-            'mechanics' => $service->mechanics()->pluck('mechanic_id')->toArray(),
-        ]);
-
-        // Jika status adalah completed, pastikan biaya jasa montir dipertahankan
-        if ($service->status === 'completed') {
-            // Ambil data form
-            $formData = $this->data;
-
-            // Log untuk debugging
-            Log::info("EditService: Form data after save", $formData);
-
-            // Periksa apakah ada mechanic_costs di form data
-            if (isset($formData['mechanic_costs']) && is_array($formData['mechanic_costs'])) {
-                // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
-                $now = now();
-                $weekStart = $now->copy()->startOfWeek()->format('Y-m-d');
-                $weekEnd = $now->copy()->endOfWeek()->format('Y-m-d');
-
-                // Update pivot table dengan biaya jasa yang benar
-                foreach ($formData['mechanic_costs'] as $costData) {
-                    if (isset($costData['mechanic_id']) && isset($costData['labor_cost'])) {
-                        $mechanicId = $costData['mechanic_id'];
-                        $laborCost = (int)$costData['labor_cost'];
-
-                        // Pastikan biaya jasa tidak 0, tapi jangan override nilai yang sudah diisi
-                        if ($laborCost == 0) {
-                            $laborCost = 50000; // Default labor cost
-                        } else {
-                            // Gunakan nilai yang sudah diisi
-                            Log::info("Using existing labor cost for mechanic #{$mechanicId}: {$laborCost}");
-                        }
-
-                        Log::info("EditService: Updating labor cost for mechanic #{$mechanicId} to {$laborCost}");
-
-                        // Update pivot table
-                        $service->mechanics()->updateExistingPivot($mechanicId, [
-                            'labor_cost' => $laborCost,
-                            'week_start' => $weekStart,
-                            'week_end' => $weekEnd,
-                        ]);
-
-                        // Hitung ulang total biaya jasa pada service
-                        $totalLaborCost = 0;
-                        foreach ($formData['mechanic_costs'] as $cost) {
-                            if (isset($cost['labor_cost']) && $cost['labor_cost'] > 0) {
-                                $totalLaborCost += (int)$cost['labor_cost'];
-                                Log::info("EditService: Adding labor cost: " . (int)$cost['labor_cost'] . " for mechanic ID: " . ($cost['mechanic_id'] ?? 'unknown'));
-                            }
-                        }
-
-                        // Update total biaya
-                        $service->labor_cost = $totalLaborCost;
-                        $service->total_cost = $totalLaborCost;
-                        $service->save();
-
-                        Log::info("EditService: Updated total labor cost for service #{$service->id} to {$totalLaborCost}");
-                    }
-                }
-
-                // Jalankan command untuk memperbarui rekap montir
-                try {
-                    \Illuminate\Support\Facades\Artisan::call('mechanic:sync-reports', [
-                        '--service_id' => $service->id,
-                    ]);
-
-                    Log::info("EditService: Mechanic reports synced for service #{$service->id}");
-                } catch (\Exception $e) {
-                    Log::error("EditService: Error syncing mechanic reports for service #{$service->id}: " . $e->getMessage());
-                }
-            }
-        }
-    }
-
+    
     protected function getHeaderActions(): array
     {
         return [
@@ -281,7 +183,7 @@ class EditService extends EditRecord
                 ->color('success')
                 ->visible(fn() => $this->record->status === 'completed')
                 ->form([
-                    Forms\Components\Select::make('template')
+                    \Filament\Forms\Components\Select::make('template')
                         ->label('Template Pesan')
                         ->options([
                             'follow_up' => 'Follow-up Standar',
@@ -290,7 +192,7 @@ class EditService extends EditRecord
                         ])
                         ->default('follow_up')
                         ->required(),
-                    Forms\Components\Textarea::make('custom_message')
+                    \Filament\Forms\Components\Textarea::make('custom_message')
                         ->label('Pesan Tambahan (Opsional)')
                         ->placeholder('Tambahkan pesan khusus di sini (opsional)')
                         ->rows(3),
@@ -352,38 +254,116 @@ class EditService extends EditRecord
                     // Redirect ke URL WhatsApp
                     redirect()->away($whatsappUrl);
                 }),
-            Actions\DeleteAction::make(),
         ];
     }
+    
+    protected function afterSave(): void
+    {
+        // Ambil data form
+        $formData = $this->form->getState();
+        
+        // Ambil service
+        $service = $this->record;
+        
+        // Log untuk debugging
+        Log::info("EditService: afterSave called for service #{$service->id}", [
+            'formData' => $formData,
+        ]);
+        
+        // Jika ada mechanic_costs, update pivot table
+        if (isset($formData['mechanic_costs']) && is_array($formData['mechanic_costs'])) {
+            foreach ($formData['mechanic_costs'] as $cost) {
+                if (isset($cost['mechanic_id']) && isset($cost['labor_cost'])) {
+                    $mechanicId = $cost['mechanic_id'];
+                    $laborCost = $cost['labor_cost'];
+                    
+                    // Pastikan biaya jasa tidak 0, tapi jangan override nilai yang sudah diisi
+                    if ($laborCost == 0) {
+                        $laborCost = 50000; // Default labor cost
+                    } else {
+                        // Gunakan nilai yang sudah diisi
+                        Log::info("Using existing labor cost for mechanic #{$mechanicId}: {$laborCost}");
+                    }
+                    
+                    // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
+                    $now = now();
+                    $weekStart = $now->copy()->startOfWeek();
+                    $weekEnd = $now->copy()->endOfWeek();
+                    
+                    // Update pivot table
+                    $service->mechanics()->updateExistingPivot($mechanicId, [
+                        'labor_cost' => $laborCost,
+                        'week_start' => $weekStart,
+                        'week_end' => $weekEnd,
+                    ]);
+                    
+                    // Hitung ulang total biaya jasa pada service
+                    $totalLaborCost = 0;
+                    foreach ($formData['mechanic_costs'] as $cost) {
+                        if (isset($cost['labor_cost']) && $cost['labor_cost'] > 0) {
+                            $totalLaborCost += (int)$cost['labor_cost'];
+                            Log::info("EditService: Adding labor cost: " . (int)$cost['labor_cost'] . " for mechanic ID: " . ($cost['mechanic_id'] ?? 'unknown'));
+                        }
+                    }
+                    
+                    // Update total biaya
+                    $service->labor_cost = $totalLaborCost;
+                    $service->total_cost = $totalLaborCost;
+                    $service->save();
+                    
+                    Log::info("EditService: Updated total labor cost for service #{$service->id} to {$totalLaborCost}");
+                }
+            }
+        }
+    }
 }
-
 EOL
-echo -e "   ${GREEN}✓${NC} File EditService.php berhasil diperbaiki"
 
-# 5. Jalankan kembali semua container
-echo -e "\n${YELLOW}5. Menjalankan kembali semua container...${NC}"
-docker-compose up -d
-if [ $? -ne 0 ]; then
-  echo -e "   ${RED}✗${NC} Gagal menjalankan kembali semua container"
-  exit 1
+# Periksa apakah file berhasil dibuat
+if [ -f "$EDIT_SERVICE_PATH" ]; then
+    echo -e "   ${GREEN}✓${NC} File EditService.php baru berhasil dibuat"
 else
-  echo -e "   ${GREEN}✓${NC} Semua container berhasil dijalankan kembali"
+    echo -e "   ${RED}✗${NC} Gagal membuat file EditService.php baru"
+    exit 1
 fi
 
-# 6. Tunggu beberapa detik
-echo -e "\n${YELLOW}6. Menunggu beberapa detik...${NC}"
-sleep 15
-echo -e "   ${GREEN}✓${NC} Selesai menunggu"
+# 4. Validasi file PHP
+echo -e "\n${YELLOW}4. Memvalidasi file PHP...${NC}"
+php -l "$EDIT_SERVICE_PATH"
+if [ $? -ne 0 ]; then
+    echo -e "   ${RED}✗${NC} File PHP tidak valid"
+    echo -e "   ${YELLOW}Mengembalikan file dari backup...${NC}"
+    cp "$BACKUP_FILE" "$EDIT_SERVICE_PATH"
+    echo -e "   ${GREEN}✓${NC} File berhasil dikembalikan dari backup"
+    exit 1
+fi
+echo -e "   ${GREEN}✓${NC} File PHP valid"
 
-# 7. Periksa status container
-echo -e "\n${YELLOW}7. Memeriksa status container...${NC}"
-docker-compose ps
-echo -e "   ${GREEN}✓${NC} Status container berhasil diperiksa"
+# 5. Clear cache dan optimize
+echo -e "\n${YELLOW}5. Membersihkan cache dan mengoptimalkan aplikasi...${NC}"
+docker-compose exec -T app php artisan cache:clear
+docker-compose exec -T app php artisan config:clear
+docker-compose exec -T app php artisan view:clear
+docker-compose exec -T app php artisan route:clear
+docker-compose exec -T app php artisan optimize
+echo -e "   ${GREEN}✓${NC} Cache dibersihkan dan aplikasi dioptimalkan"
 
-echo -e "\n${GREEN}Perbaikan aplikasi dengan pendekatan langsung selesai!${NC}"
+# 6. Restart container aplikasi
+echo -e "\n${YELLOW}6. Me-restart container aplikasi...${NC}"
+docker-compose restart app
+if [ $? -ne 0 ]; then
+  echo -e "   ${RED}✗${NC} Gagal me-restart container aplikasi"
+  exit 1
+fi
+echo -e "   ${GREEN}✓${NC} Container aplikasi berhasil di-restart"
+
+echo -e "\n${GREEN}Pembuatan ulang file EditService.php selesai!${NC}"
 echo -e "${YELLOW}Catatan:${NC}"
-echo -e "1. Semua file cadangan telah dihapus"
-echo -e "2. File EditService.php telah diperbaiki"
-echo -e "3. Semua container telah di-restart"
-echo -e "4. Jika masih ada masalah, coba periksa log aplikasi:"
-echo -e "   ${YELLOW}docker-compose logs app${NC}"
+echo -e "1. File EditService.php telah dibuat ulang dengan versi terbaru"
+echo -e "2. Backup file asli disimpan di $BACKUP_FILE"
+echo -e "3. Jika terjadi masalah, Anda dapat mengembalikan file dari backup"
+echo -e "4. Untuk menguji perbaikan:"
+echo -e "   - Buka halaman edit servis"
+echo -e "   - Pastikan tidak ada error 'Cannot redeclare'"
+echo -e "   - Pastikan biaya jasa montir muncul dengan benar"
+echo -e "   - Pastikan total biaya servis dihitung dengan benar"
