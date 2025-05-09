@@ -29,12 +29,10 @@ docker exec $CONTAINER_NAME php artisan view:clear
 docker exec $CONTAINER_NAME php artisan package:discover
 docker exec $CONTAINER_NAME php artisan filament:cache
 docker exec $CONTAINER_NAME php artisan route:cache
-docker exec $CONTAINER_NAME php artisan view:cache
 
 # Optimize the application
 echo "Optimizing application..."
 docker exec $CONTAINER_NAME php artisan optimize:clear
-docker exec $CONTAINER_NAME php artisan filament:cache
 docker exec $CONTAINER_NAME php artisan optimize
 
 # Jalankan perintah untuk memperbaiki laporan montir
@@ -87,14 +85,4 @@ echo "3. Klik tombol 'Riwayat Servis' pada rekap montir tersebut"
 echo "4. Secara default, halaman akan menampilkan servis dengan status 'Selesai'"
 echo "5. Gunakan tombol filter untuk beralih antara status servis yang berbeda"
 echo ""
-echo "PENTING: Jika masih ada error 404 pada halaman riwayat servis montir, silakan jalankan script ini sekali lagi."
-echo "Jika masih tetap error, coba akses halaman dengan URL: https://hartonomotor.xyz/admin/mechanic-reports/{id}/services"
-echo "Ganti {id} dengan ID laporan montir yang ingin dilihat, misalnya: https://hartonomotor.xyz/admin/mechanic-reports/1/services"
-echo ""
-echo "Jika masih tetap error, coba jalankan perintah berikut secara manual di server:"
-echo "php artisan cache:clear"
-echo "php artisan config:clear"
-echo "php artisan route:clear"
-echo "php artisan view:clear"
-echo "php artisan package:discover"
-echo "php artisan filament:cache"
+echo "PENTING: Jika masih ada error, silakan jalankan script ini sekali lagi."
