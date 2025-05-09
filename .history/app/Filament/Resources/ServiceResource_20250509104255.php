@@ -496,9 +496,8 @@ class ServiceResource extends Resource
                                             // Hitung total biaya jasa
                                             $totalLaborCost = 0;
                                             foreach ($mechanicCosts as $cost) {
-                                                if (isset($cost['labor_cost']) && $cost['labor_cost'] > 0) {
+                                                if (isset($cost['labor_cost'])) {
                                                     $totalLaborCost += (int)$cost['labor_cost'];
-                                                    Log::info("afterStateUpdated: Adding labor cost: " . (int)$cost['labor_cost'] . " for mechanic ID: " . ($cost['mechanic_id'] ?? 'unknown'));
                                                 }
                                             }
 
@@ -506,7 +505,7 @@ class ServiceResource extends Resource
                                             $set('labor_cost', $totalLaborCost);
                                             $set('total_cost', $totalLaborCost);
 
-                                            Log::info("afterStateUpdated: Updated total labor cost to {$totalLaborCost}");
+                                            Log::info("Updated total labor cost to {$totalLaborCost}");
                                         }
                                     }
                                 }
@@ -849,9 +848,8 @@ class ServiceResource extends Resource
                             // Hitung total biaya jasa dari semua montir
                             $totalLaborCost = 0;
                             foreach ($data['mechanic_costs'] as $costData) {
-                                if (isset($costData['labor_cost']) && $costData['labor_cost'] > 0) {
+                                if (isset($costData['labor_cost'])) {
                                     $totalLaborCost += (int)$costData['labor_cost'];
-                                    Log::info("markAsCompleted: Adding labor cost: " . (int)$costData['labor_cost'] . " for mechanic ID: " . ($costData['mechanic_id'] ?? 'unknown'));
                                 }
                             }
 
@@ -859,7 +857,7 @@ class ServiceResource extends Resource
                             $record->labor_cost = $totalLaborCost;
                             $record->total_cost = $totalLaborCost; // Karena parts_cost sudah tidak digunakan
 
-                            Log::info("markAsCompleted: Updated service #{$record->id} total labor cost: {$totalLaborCost}");
+                            Log::info("Updated service #{$record->id} total labor cost: {$totalLaborCost}");
 
                             foreach ($data['mechanic_costs'] as $costData) {
                                 if (isset($costData['mechanic_id']) && isset($costData['labor_cost'])) {
@@ -904,16 +902,15 @@ class ServiceResource extends Resource
                             // Fallback ke cara lama jika tidak ada data biaya jasa per montir
                             Log::info('No mechanic costs data, using default labor cost');
 
-                            // Set default ke nilai yang masuk akal
-                            $defaultLaborCost = 50000; // Default biaya jasa yang masuk akal
+                            // Jika biaya jasa total adalah 0, set default ke nilai yang masuk akal
+                            $defaultLaborCost = $record->labor_cost;
+                            if ($defaultLaborCost == 0) {
+                                $defaultLaborCost = 50000; // Default biaya jasa yang masuk akal
 
-                            // Update total biaya jasa pada record
-                            $totalLaborCost = $defaultLaborCost * count($data['mechanics']);
-                            $record->labor_cost = $totalLaborCost;
-                            $record->total_cost = $totalLaborCost;
-
-                            // Log untuk debugging
-                            Log::info("markAsCompleted fallback: Setting total cost for service #{$record->id} to {$totalLaborCost}");
+                                // Update total biaya jasa pada record
+                                $record->labor_cost = $defaultLaborCost * count($data['mechanics']);
+                                $record->total_cost = $record->labor_cost;
+                            }
 
                             // Simpan montir yang dipilih dengan biaya jasa default
                             foreach ($data['mechanics'] as $mechanicId) {
@@ -1237,10 +1234,7 @@ class ServiceResource extends Resource
 
                                     // Hitung biaya jasa per montir - setiap montir mendapatkan biaya jasa penuh
                                     // Tidak perlu membagi biaya jasa, setiap montir mendapatkan biaya jasa penuh
-                                    $laborCostPerMechanic = 50000; // Default labor cost
-
-                                    // Log untuk debugging
-                                    Log::info("markAsCompletedBulk: Setting default labor cost for service #{$record->id} to {$laborCostPerMechanic}");
+                                    $laborCostPerMechanic = $record->labor_cost;
 
                                     // Dapatkan tanggal awal dan akhir minggu saat ini (Senin-Minggu)
                                     $now = now();
@@ -1263,19 +1257,11 @@ class ServiceResource extends Resource
                                         ]);
                                     }
 
-                                    // Hitung total biaya jasa
-                                    $totalLaborCost = $laborCostPerMechanic * count($data['mechanics']);
-
                                     // Update status servis dan nomor nota
                                     $record->status = 'completed';
                                     $record->invoice_number = $data['invoice_number'] ?? null;
                                     $record->completed_at = now();
                                     $record->exit_time = now();
-                                    $record->labor_cost = $totalLaborCost;
-                                    $record->total_cost = $totalLaborCost;
-
-                                    // Log untuk debugging
-                                    Log::info("markAsCompletedBulk: Setting total cost for service #{$record->id} to {$totalLaborCost}");
 
                                     // Log untuk debugging
                                     \Illuminate\Support\Facades\Log::info("Bulk action: Updating service #{$record->id} status to completed", [

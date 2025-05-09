@@ -904,16 +904,15 @@ class ServiceResource extends Resource
                             // Fallback ke cara lama jika tidak ada data biaya jasa per montir
                             Log::info('No mechanic costs data, using default labor cost');
 
-                            // Set default ke nilai yang masuk akal
-                            $defaultLaborCost = 50000; // Default biaya jasa yang masuk akal
+                            // Jika biaya jasa total adalah 0, set default ke nilai yang masuk akal
+                            $defaultLaborCost = $record->labor_cost;
+                            if ($defaultLaborCost == 0) {
+                                $defaultLaborCost = 50000; // Default biaya jasa yang masuk akal
 
-                            // Update total biaya jasa pada record
-                            $totalLaborCost = $defaultLaborCost * count($data['mechanics']);
-                            $record->labor_cost = $totalLaborCost;
-                            $record->total_cost = $totalLaborCost;
-
-                            // Log untuk debugging
-                            Log::info("markAsCompleted fallback: Setting total cost for service #{$record->id} to {$totalLaborCost}");
+                                // Update total biaya jasa pada record
+                                $record->labor_cost = $defaultLaborCost * count($data['mechanics']);
+                                $record->total_cost = $record->labor_cost;
+                            }
 
                             // Simpan montir yang dipilih dengan biaya jasa default
                             foreach ($data['mechanics'] as $mechanicId) {
