@@ -283,8 +283,8 @@ class ServiceResource extends Resource
                             ->searchable()
                             ->reactive()
                             ->visible(function () {
-                                // Tampilkan untuk admin dan staff
-                                return Auth::user()->isAdmin() || Auth::user()->isStaff();
+                                // Hanya tampilkan untuk admin
+                                return Auth::user()->isAdmin();
                             })
                             ->afterStateUpdated(function ($state, Forms\Set $set, $record) {
                                 if (is_array($state)) {
@@ -434,10 +434,18 @@ class ServiceResource extends Resource
                         Forms\Components\Select::make('status')
                             ->label('Status Servis')
                             ->options(function () {
-                                // Tampilkan semua opsi untuk admin dan staff
+                                // Jika user adalah admin, tampilkan semua opsi
+                                if (Auth::user()->isAdmin()) {
+                                    return [
+                                        'in_progress' => 'Dalam Pengerjaan',
+                                        'completed' => 'Selesai',
+                                        'cancelled' => 'Dibatalkan',
+                                    ];
+                                }
+
+                                // Jika user adalah staff, hanya tampilkan opsi 'in_progress' dan 'cancelled'
                                 return [
                                     'in_progress' => 'Dalam Pengerjaan',
-                                    'completed' => 'Selesai',
                                     'cancelled' => 'Dibatalkan',
                                 ];
                             })

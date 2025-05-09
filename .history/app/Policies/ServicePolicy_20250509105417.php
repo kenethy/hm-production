@@ -111,6 +111,6 @@ class ServicePolicy
      */
     public function markAsCompleted(User $user): bool
     {
-        return $user->isAdmin() || $user->isStaff(); // Admin dan staff dapat menandai servis sebagai selesai
+        return $user->isAdmin(); // Hanya admin yang dapat menandai servis sebagai selesai
     }
 }
