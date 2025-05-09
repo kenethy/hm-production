@@ -93,6 +93,7 @@ class ServicesRelationManager extends RelationManager
             ])
             ->modifyQueryUsing(function (Builder $query) {
                 $mechanicReport = $this->getOwnerRecord();
+                $mechanicId = $mechanicReport->mechanic_id;
                 $weekStart = $mechanicReport->week_start;
                 $weekEnd = $mechanicReport->week_end;
 

@@ -1,31 +1,36 @@
 <?php
 
-namespace App\Filament\Resources\MechanicReportResource\RelationManagers;
+namespace App\Filament\Resources\MechanicReportResource\Pages;
 
+use App\Filament\Resources\MechanicReportResource;
+use App\Models\MechanicReport;
 use App\Models\Service;
-use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Actions;
+use Filament\Resources\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
-class ServicesRelationManager extends RelationManager
+class ViewMechanicServices extends Page
 {
-    protected static string $relationship = 'mechanic';
+    protected static string $resource = MechanicReportResource::class;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static string $view = 'filament.resources.mechanic-report-resource.pages.view-mechanic-services';
 
-    protected static ?string $title = 'Riwayat Servis';
-
-    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
-    {
-        return $ownerRecord->mechanic()->exists();
-    }
+    public MechanicReport $record;
 
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('service_type')
+            ->query(
+                Service::query()
+                    ->join('mechanic_service', 'services.id', '=', 'mechanic_service.service_id')
+                    ->where('mechanic_service.mechanic_id', $this->record->mechanic_id)
+                    ->where('mechanic_service.week_start', $this->record->week_start)
+                    ->where('mechanic_service.week_end', $this->record->week_end)
+                    ->select('services.*', 'mechanic_service.invoice_number', 'mechanic_service.labor_cost')
+            )
             ->columns([
                 Tables\Columns\TextColumn::make('service_type')
                     ->label('Jenis Servis')
@@ -80,30 +85,20 @@ class ServicesRelationManager extends RelationManager
                     ->placeholder('Semua Status')
                     ->multiple(),
             ])
-            ->headerActions([
-                // No header actions needed
-            ])
             ->actions([
                 // View action to see service details
                 Tables\Actions\ViewAction::make()
                     ->url(fn(Service $record): string => route('filament.admin.resources.services.edit', ['record' => $record])),
-            ])
-            ->bulkActions([
-                // No bulk actions needed
-            ])
-            ->modifyQueryUsing(function (Builder $query) {
-                $mechanicReport = $this->getOwnerRecord();
-                $weekStart = $mechanicReport->week_start;
-                $weekEnd = $mechanicReport->week_end;
+            ]);
+    }
 
-                return $query->with(['services' => function ($query) use ($weekStart, $weekEnd) {
-                    $query->wherePivot('week_start', $weekStart)
-                        ->wherePivot('week_end', $weekEnd);
-                }])
-                    ->whereHas('services', function ($query) use ($weekStart, $weekEnd) {
-                        $query->wherePivot('week_start', $weekStart)
-                            ->wherePivot('week_end', $weekEnd);
-                    });
-            });
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('back')
+                ->label('Kembali')
+                ->url(fn () => MechanicReportResource::getUrl('edit', ['record' => $this->record]))
+                ->color('gray'),
+        ];
     }
 }

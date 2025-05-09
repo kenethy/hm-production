@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MechanicReportResource\Pages;
+use App\Filament\Resources\MechanicReportResource\RelationManagers;
+use App\Models\Mechanic;
 use App\Models\MechanicReport;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -224,12 +226,6 @@ class MechanicReportResource extends Resource
                             ->success()
                             ->send();
                     }),
-
-                Tables\Actions\Action::make('viewServices')
-                    ->label('Riwayat Servis')
-                    ->icon('heroicon-o-clipboard-document-list')
-                    ->color('info')
-                    ->url(fn(MechanicReport $record) => static::getUrl('services', ['record' => $record])),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -257,7 +253,7 @@ class MechanicReportResource extends Resource
     public static function getRelations(): array
     {
         return [
-            // No relation managers needed
+            RelationManagers\ServicesRelationManager::class,
         ];
     }
 

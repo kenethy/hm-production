@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MechanicReportResource\Pages;
+use App\Filament\Resources\MechanicReportResource\RelationManagers;
+use App\Models\Mechanic;
 use App\Models\MechanicReport;
 use Carbon\Carbon;
 use Filament\Forms;
