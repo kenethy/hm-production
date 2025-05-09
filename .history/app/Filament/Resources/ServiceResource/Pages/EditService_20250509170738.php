@@ -25,7 +25,7 @@ class EditService extends EditRecord
             Log::info("EditService: Mounting edit page for service", ["record_type" => gettype($record)]);
         }
 
-        // Pastikan mechanic_costs diisi dengan benar ya
+        // Pastikan mechanic_costs diisi dengan benar
         $this->fillMechanicCosts();
     }
 

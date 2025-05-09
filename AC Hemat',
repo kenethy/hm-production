@@ -1,0 +1,19 @@
+[90m= [39m[34;4mApp\Models\Promo[39;24m {#7379
+    [34mtitle[39m: "[32mPromo Tune Up Spesial[39m",
+    [34mslug[39m: "[32mpromo-tune-up-spesial[39m",
+    [34mdescription[39m: "[32mDapatkan diskon 20% untuk layanan tune up mesin. Berlaku hingga akhir bulan.[39m",
+    [34mimage_path[39m: "[32mpromos/tune-up-promo.jpg[39m",
+    [34moriginal_price[39m: [35m500000[39m,
+    [34mpromo_price[39m: [35m400000[39m,
+    [34mdiscount_percentage[39m: [35m20[39m,
+    [34mstart_date[39m: "[32m2025-05-04 10:28:26[39m",
+    [34mend_date[39m: "[32m2025-06-03 10:28:26[39m",
+    [34mis_featured[39m: [36mtrue[39m,
+    [34mis_active[39m: [36mtrue[39m,
+    [34mpromo_code[39m: "[32mTUNEUP20[39m",
+    [34mremaining_slots[39m: [35m10[39m,
+    [34mupdated_at[39m: "[32m2025-05-09 10:28:26[39m",
+    [34mcreated_at[39m: "[32m2025-05-09 10:28:26[39m",
+    [34mid[39m: [35m9[39m,
+  }
+

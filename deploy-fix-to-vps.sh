@@ -1,3 +1,59 @@
+#!/bin/bash
+# deploy-fix-to-vps.sh - Script untuk menerapkan perbaikan ke VPS
+
+# Warna untuk output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Konfigurasi VPS
+VPS_USER="root"
+VPS_HOST="hartonomotor.xyz"
+VPS_PATH="/var/www/html"
+
+echo -e "${YELLOW}Memulai penerapan perbaikan ke VPS...${NC}\n"
+
+# 1. Buat file perbaikan
+echo -e "${YELLOW}1. Membuat file perbaikan...${NC}"
+cat > fix-edit-service-vps.sh << 'EOL'
+#!/bin/bash
+# fix-edit-service-vps.sh - Script untuk memperbaiki masalah "Attempt to read property id on string" di VPS
+
+# Warna untuk output
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Path file
+EDIT_SERVICE_PATH="app/Filament/Resources/ServiceResource/Pages/EditService.php"
+BACKUP_DIR="app/Filament/Resources/ServiceResource/Pages/backups"
+BACKUP_FILE="${BACKUP_DIR}/EditService.php.bak.$(date +%Y%m%d%H%M%S)"
+
+echo -e "${YELLOW}Memulai perbaikan masalah 'Attempt to read property id on string' di VPS...${NC}\n"
+
+# 1. Buat direktori backup jika belum ada
+echo -e "${YELLOW}1. Membuat direktori backup...${NC}"
+mkdir -p "$BACKUP_DIR"
+echo -e "   ${GREEN}✓${NC} Direktori backup berhasil dibuat"
+
+# 2. Backup file asli
+echo -e "\n${YELLOW}2. Membuat backup file asli...${NC}"
+if [ -f "$EDIT_SERVICE_PATH" ]; then
+    cp "$EDIT_SERVICE_PATH" "$BACKUP_FILE"
+    echo -e "   ${GREEN}✓${NC} File asli berhasil dibackup ke $BACKUP_FILE"
+else
+    echo -e "   ${RED}✗${NC} File asli tidak ditemukan"
+    exit 1
+fi
+
+# 3. Buat file EditService.php baru
+echo -e "\n${YELLOW}3. Membuat file EditService.php baru...${NC}"
+
+cat > "$EDIT_SERVICE_PATH" << 'EOF'
 <?php
 
 namespace App\Filament\Resources\ServiceResource\Pages;
@@ -25,7 +81,7 @@ class EditService extends EditRecord
             Log::info("EditService: Mounting edit page for service", ["record_type" => gettype($record)]);
         }
 
-        // Pastikan mechanic_costs diisi dengan benar ya
+        // Pastikan mechanic_costs diisi dengan benar
         $this->fillMechanicCosts();
     }
 
@@ -53,7 +109,7 @@ class EditService extends EditRecord
         }
 
         // Siapkan mechanic_costs berdasarkan montir yang ada di database
-        if ($service->mechanics()->count() > 0) {
+        if (method_exists($service, 'mechanics') && $service->mechanics()->count() > 0) {
             $mechanicCosts = [];
 
             foreach ($service->mechanics as $mechanic) {
@@ -210,19 +266,19 @@ class EditService extends EditRecord
                         $service->total_cost = $totalLaborCost;
                         $service->save();
 
-                        Log::info("EditService: Updated total labor cost for service #{$service->id} to {$totalLaborCost}");
+                        Log::info("EditService: Updated total labor cost for service #{$service->getKey()} to {$totalLaborCost}");
                     }
                 }
 
                 // Jalankan command untuk memperbarui rekap montir
                 try {
                     \Illuminate\Support\Facades\Artisan::call('mechanic:sync-reports', [
-                        '--service_id' => $service->id,
+                        '--service_id' => $service->getKey(),
                     ]);
 
-                    Log::info("EditService: Mechanic reports synced for service #{$service->id}");
+                    Log::info("EditService: Mechanic reports synced for service #{$service->getKey()}");
                 } catch (\Exception $e) {
-                    Log::error("EditService: Error syncing mechanic reports for service #{$service->id}: " . $e->getMessage());
+                    Log::error("EditService: Error syncing mechanic reports for service #{$service->getKey()}: " . $e->getMessage());
                 }
             }
         }
@@ -323,3 +379,64 @@ class EditService extends EditRecord
         ];
     }
 }
+EOF
+
+# 4. Validasi file PHP
+echo -e "\n${YELLOW}4. Memvalidasi file PHP...${NC}"
+php -l "$EDIT_SERVICE_PATH"
+if [ $? -ne 0 ]; then
+    echo -e "   ${RED}✗${NC} File PHP tidak valid"
+    echo -e "   ${YELLOW}Mengembalikan file dari backup...${NC}"
+    cp "$BACKUP_FILE" "$EDIT_SERVICE_PATH"
+    echo -e "   ${GREEN}✓${NC} File berhasil dikembalikan dari backup"
+    exit 1
+fi
+echo -e "   ${GREEN}✓${NC} File PHP valid"
+
+# 5. Bersihkan cache Laravel
+echo -e "\n${YELLOW}5. Membersihkan cache Laravel...${NC}"
+php artisan cache:clear
+php artisan config:clear
+php artisan view:clear
+php artisan route:clear
+php artisan optimize
+echo -e "   ${GREEN}✓${NC} Cache Laravel berhasil dibersihkan"
+
+echo -e "\n${GREEN}Perbaikan masalah 'Attempt to read property id on string' selesai!${NC}"
+echo -e "${YELLOW}Catatan:${NC}"
+echo -e "1. File EditService.php telah dibuat ulang dengan versi yang aman"
+echo -e "2. Backup file asli disimpan di $BACKUP_FILE"
+echo -e "3. Cache Laravel telah dibersihkan"
+echo -e "4. Untuk menguji perbaikan:"
+echo -e "   - Buka halaman edit servis di browser"
+echo -e "   - Pastikan tidak ada error 'Attempt to read property \"id\" on string'"
+EOL
+
+chmod +x fix-edit-service-vps.sh
+echo -e "   ${GREEN}✓${NC} File perbaikan berhasil dibuat"
+
+# 2. Upload file perbaikan ke VPS
+echo -e "\n${YELLOW}2. Mengupload file perbaikan ke VPS...${NC}"
+scp fix-edit-service-vps.sh ${VPS_USER}@${VPS_HOST}:${VPS_PATH}/
+if [ $? -ne 0 ]; then
+  echo -e "   ${RED}✗${NC} Gagal mengupload file perbaikan ke VPS"
+  exit 1
+fi
+echo -e "   ${GREEN}✓${NC} File perbaikan berhasil diupload ke VPS"
+
+# 3. Jalankan file perbaikan di VPS
+echo -e "\n${YELLOW}3. Menjalankan file perbaikan di VPS...${NC}"
+ssh ${VPS_USER}@${VPS_HOST} "cd ${VPS_PATH} && chmod +x fix-edit-service-vps.sh && ./fix-edit-service-vps.sh"
+if [ $? -ne 0 ]; then
+  echo -e "   ${RED}✗${NC} Gagal menjalankan file perbaikan di VPS"
+  exit 1
+fi
+echo -e "   ${GREEN}✓${NC} File perbaikan berhasil dijalankan di VPS"
+
+echo -e "\n${GREEN}Penerapan perbaikan ke VPS selesai!${NC}"
+echo -e "${YELLOW}Catatan:${NC}"
+echo -e "1. File EditService.php di VPS telah diperbaiki"
+echo -e "2. Cache Laravel di VPS telah dibersihkan"
+echo -e "3. Untuk menguji perbaikan:"
+echo -e "   - Buka halaman edit servis di browser"
+echo -e "   - Pastikan tidak ada error 'Attempt to read property \"id\" on string'"

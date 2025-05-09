@@ -25,7 +25,7 @@ class EditService extends EditRecord
             Log::info("EditService: Mounting edit page for service", ["record_type" => gettype($record)]);
         }
 
-        // Pastikan mechanic_costs diisi dengan benar ya
+        // Pastikan mechanic_costs diisi dengan benar
         $this->fillMechanicCosts();
     }
 
@@ -146,16 +146,10 @@ class EditService extends EditRecord
         // Ambil data service yang baru disimpan
         $service = $this->record;
 
-        // Jika tidak ada service atau bukan objek, keluar
-        if (!$service || !is_object($service)) {
-            Log::info("EditService: No valid service record in afterSave", ["record_type" => gettype($service)]);
-            return;
-        }
-
         // Log untuk debugging
-        Log::info("EditService: After save for service #{$service->getKey()}", [
-            'status' => $service->status ?? 'unknown',
-            'mechanics' => method_exists($service, 'mechanics') ? $service->mechanics()->pluck('mechanic_id')->toArray() : [],
+        Log::info("EditService: After save for service #{$service->id}", [
+            'status' => $service->status,
+            'mechanics' => $service->mechanics()->pluck('mechanic_id')->toArray(),
         ]);
 
         // Jika status adalah completed, pastikan biaya jasa montir dipertahankan
