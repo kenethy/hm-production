@@ -103,7 +103,7 @@ class ViewMechanicServices extends Page
                     ->heading('Dibatalkan'),
                 'all' => fn(Table $table): Table => $table
                     ->heading('Semua Status'),
-            ])
+            ], layout: Tables\Tabs\TabsLayout::Pill)
             ->tabLabel('completed', 'Selesai')
             ->tabLabel('in_progress', 'Dalam Pengerjaan')
             ->tabLabel('cancelled', 'Dibatalkan')

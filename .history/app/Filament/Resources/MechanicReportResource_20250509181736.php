@@ -266,7 +266,7 @@ class MechanicReportResource extends Resource
         return [
             'index' => Pages\ListMechanicReports::route('/'),
             'edit' => Pages\EditMechanicReport::route('/{record}/edit'),
-            'view-mechanic-services' => Pages\ViewMechanicServices::route('/{record}/services'),
+            'services' => Pages\ViewMechanicServices::route('/{record}/services'),
         ];
     }
 

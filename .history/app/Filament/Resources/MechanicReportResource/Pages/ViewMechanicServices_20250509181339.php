@@ -10,6 +10,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class ViewMechanicServices extends Page
 {
@@ -69,12 +70,7 @@ class ViewMechanicServices extends Page
                     }),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Tanggal Masuk')
-                    ->dateTime('d M Y H:i')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('completed_at')
-                    ->label('Tanggal Selesai')
+                    ->label('Tanggal Servis')
                     ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
@@ -87,30 +83,8 @@ class ViewMechanicServices extends Page
                         'cancelled' => 'Dibatalkan',
                     ])
                     ->placeholder('Semua Status')
-                    ->multiple()
-                    ->default(['completed']),
+                    ->multiple(),
             ])
-            ->filtersFormWidth('sm')
-            ->tabs([
-                'completed' => fn(Table $table): Table => $table
-                    ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'completed'))
-                    ->heading('Selesai'),
-                'in_progress' => fn(Table $table): Table => $table
-                    ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'in_progress'))
-                    ->heading('Dalam Pengerjaan'),
-                'cancelled' => fn(Table $table): Table => $table
-                    ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'cancelled'))
-                    ->heading('Dibatalkan'),
-                'all' => fn(Table $table): Table => $table
-                    ->heading('Semua Status'),
-            ])
-            ->tabLabel('completed', 'Selesai')
-            ->tabLabel('in_progress', 'Dalam Pengerjaan')
-            ->tabLabel('cancelled', 'Dibatalkan')
-            ->tabLabel('all', 'Semua Status')
-            ->persistTabInQueryString()
-            ->defaultTab('completed')
-            ->defaultSort('created_at', 'desc')
             ->actions([
                 // View action to see service details
                 Tables\Actions\ViewAction::make()
@@ -123,7 +97,7 @@ class ViewMechanicServices extends Page
         return [
             Actions\Action::make('back')
                 ->label('Kembali')
-                ->url(fn() => MechanicReportResource::getUrl('edit', ['record' => $this->record]))
+                ->url(fn () => MechanicReportResource::getUrl('edit', ['record' => $this->record]))
                 ->color('gray'),
         ];
     }

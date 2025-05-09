@@ -10,6 +10,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class ViewMechanicServices extends Page
 {
@@ -92,22 +93,20 @@ class ViewMechanicServices extends Page
             ])
             ->filtersFormWidth('sm')
             ->tabs([
-                'completed' => fn(Table $table): Table => $table
-                    ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'completed'))
-                    ->heading('Selesai'),
-                'in_progress' => fn(Table $table): Table => $table
-                    ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'in_progress'))
-                    ->heading('Dalam Pengerjaan'),
-                'cancelled' => fn(Table $table): Table => $table
-                    ->modifyQueryUsing(fn(Builder $query) => $query->where('status', 'cancelled'))
-                    ->heading('Dibatalkan'),
-                'all' => fn(Table $table): Table => $table
-                    ->heading('Semua Status'),
-            ])
-            ->tabLabel('completed', 'Selesai')
-            ->tabLabel('in_progress', 'Dalam Pengerjaan')
-            ->tabLabel('cancelled', 'Dibatalkan')
-            ->tabLabel('all', 'Semua Status')
+                'completed' => Tables\Enums\FiltersLayout::AboveContent,
+                'in_progress' => Tables\Enums\FiltersLayout::AboveContent,
+                'cancelled' => Tables\Enums\FiltersLayout::AboveContent,
+                'all' => Tables\Enums\FiltersLayout::AboveContent,
+            ], function (string $tabId, Table $table): Builder {
+                $query = $table->getQuery();
+
+                return match ($tabId) {
+                    'completed' => $query->where('status', 'completed'),
+                    'in_progress' => $query->where('status', 'in_progress'),
+                    'cancelled' => $query->where('status', 'cancelled'),
+                    default => $query,
+                };
+            }, Tables\Enums\TabsLayout::Contained)
             ->persistTabInQueryString()
             ->defaultTab('completed')
             ->defaultSort('created_at', 'desc')

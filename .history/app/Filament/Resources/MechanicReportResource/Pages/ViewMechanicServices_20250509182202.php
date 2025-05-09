@@ -10,6 +10,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class ViewMechanicServices extends Page
 {
@@ -104,10 +105,6 @@ class ViewMechanicServices extends Page
                 'all' => fn(Table $table): Table => $table
                     ->heading('Semua Status'),
             ])
-            ->tabLabel('completed', 'Selesai')
-            ->tabLabel('in_progress', 'Dalam Pengerjaan')
-            ->tabLabel('cancelled', 'Dibatalkan')
-            ->tabLabel('all', 'Semua Status')
             ->persistTabInQueryString()
             ->defaultTab('completed')
             ->defaultSort('created_at', 'desc')
