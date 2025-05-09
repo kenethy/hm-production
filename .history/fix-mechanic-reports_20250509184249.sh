@@ -38,6 +38,7 @@ docker exec $CONTAINER_NAME php artisan view:cache
 # Optimize the application
 echo "Optimizing application..."
 docker exec $CONTAINER_NAME php artisan optimize
+docker exec $CONTAINER_NAME php artisan optimize
 
 # Jalankan perintah untuk memperbaiki laporan montir
 echo "Menjalankan perintah regenerate-mechanic-reports..."
