@@ -39,10 +39,6 @@ docker exec $CONTAINER_NAME php artisan view:cache
 echo "Optimizing application..."
 docker exec $CONTAINER_NAME php artisan optimize
 
-# Periksa rute yang terdaftar
-echo "Memeriksa rute yang terdaftar..."
-docker exec $CONTAINER_NAME php artisan route:list | grep mechanic-reports
-
 # Jalankan perintah untuk memperbaiki laporan montir
 echo "Menjalankan perintah regenerate-mechanic-reports..."
 docker exec $CONTAINER_NAME php artisan mechanic:regenerate-reports
@@ -109,6 +105,3 @@ echo "php artisan filament:cache"
 echo "php artisan route:cache"
 echo "php artisan view:cache"
 echo "php artisan optimize"
-echo ""
-echo "Untuk memeriksa rute yang terdaftar, jalankan perintah berikut:"
-echo "php artisan route:list | grep mechanic-reports"
