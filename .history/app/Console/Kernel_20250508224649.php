@@ -20,7 +20,6 @@ class Kernel extends ConsoleKernel
         Commands\FixMechanicReports::class,
         Commands\GenerateMechanicReports::class,
         Commands\RegenerateMechanicReports::class,
-        Commands\SyncMechanicReports::class,
     ];
 
     /**
@@ -32,16 +31,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('mechanic:generate-reports')
             ->weeklyOn(1, '00:01')
             ->appendOutputTo(storage_path('logs/mechanic-reports.log'));
-
-        // Sync mechanic reports every hour
-        $schedule->command('mechanic:sync-reports')
-            ->hourly()
-            ->appendOutputTo(storage_path('logs/mechanic-reports-sync.log'));
-
-        // Full validation of mechanic reports every day at midnight
-        $schedule->command('mechanic:sync-reports --force')
-            ->dailyAt('00:00')
-            ->appendOutputTo(storage_path('logs/mechanic-reports-full-sync.log'));
     }
 
     /**
@@ -49,7 +38,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__ . '/Commands');
+        $this->load(__DIR__.'/Commands');
 
         require base_path('routes/console.php');
     }
