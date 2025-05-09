@@ -22,8 +22,7 @@ class ViewMechanicServices extends Page
     {
         $this->record = MechanicReport::findOrFail($record);
 
-        // Get all services for this mechanic in this period
-        $allServices = Service::query()
+        $this->services = Service::query()
             ->join('mechanic_service', 'services.id', '=', 'mechanic_service.service_id')
             ->where('mechanic_service.mechanic_id', $this->record->mechanic_id)
             ->where('mechanic_service.week_start', $this->record->week_start)
@@ -31,15 +30,6 @@ class ViewMechanicServices extends Page
             ->select('services.*', 'mechanic_service.invoice_number', 'mechanic_service.labor_cost')
             ->orderBy('services.created_at', 'desc')
             ->get();
-
-        // Filter services by status (default: completed)
-        $status = request()->query('status', 'completed');
-
-        if ($status === 'all') {
-            $this->services = $allServices;
-        } else {
-            $this->services = $allServices->where('status', $status);
-        }
     }
 
     protected function getHeaderActions(): array
