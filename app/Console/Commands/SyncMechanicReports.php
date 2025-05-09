@@ -121,51 +121,90 @@ class SyncMechanicReports extends Command
 
         // Process each mechanic
         foreach ($service->mechanics as $mechanic) {
-            // Set week dates if not set
-            if (empty($mechanic->pivot->week_start) || empty($mechanic->pivot->week_end)) {
-                $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
-                $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
+            try {
+                // Check if mechanic is valid
+                if (!$mechanic || !$mechanic->id) {
+                    Log::error("SyncMechanicReports: Invalid mechanic for service #{$service->id}");
+                    continue;
+                }
                 
-                Log::info("SyncMechanicReports: Setting week dates for mechanic #{$mechanic->id} on service #{$service->id}");
+                // Check if pivot exists
+                if (!isset($mechanic->pivot)) {
+                    Log::error("SyncMechanicReports: Pivot data missing for mechanic #{$mechanic->id} on service #{$service->id}");
+                    
+                    // Try to reload the relationship
+                    $service = Service::with('mechanics')->find($service->id);
+                    if (!$service) {
+                        Log::error("SyncMechanicReports: Could not reload service #{$service->id}");
+                        continue;
+                    }
+                    
+                    // Find the mechanic in the reloaded service
+                    $foundMechanic = false;
+                    foreach ($service->mechanics as $reloadedMechanic) {
+                        if ($reloadedMechanic->id == $mechanic->id) {
+                            $mechanic = $reloadedMechanic;
+                            $foundMechanic = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!$foundMechanic || !isset($mechanic->pivot)) {
+                        Log::error("SyncMechanicReports: Still could not find pivot data for mechanic #{$mechanic->id} on service #{$service->id}");
+                        continue;
+                    }
+                }
                 
-                $service->mechanics()->updateExistingPivot($mechanic->id, [
-                    'week_start' => $weekStart,
-                    'week_end' => $weekEnd,
+                // Set week dates if not set
+                $weekStart = null;
+                $weekEnd = null;
+                
+                if (empty($mechanic->pivot->week_start) || empty($mechanic->pivot->week_end)) {
+                    $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
+                    $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
+                    
+                    Log::info("SyncMechanicReports: Setting week dates for mechanic #{$mechanic->id} on service #{$service->id}");
+                    
+                    $service->mechanics()->updateExistingPivot($mechanic->id, [
+                        'week_start' => $weekStart,
+                        'week_end' => $weekEnd,
+                    ]);
+                } else {
+                    $weekStart = $mechanic->pivot->week_start;
+                    $weekEnd = $mechanic->pivot->week_end;
+                }
+                
+                // Set labor_cost if not set
+                $laborCost = $mechanic->pivot->labor_cost ?? 0;
+                if (empty($laborCost) || $laborCost == 0) {
+                    $defaultLaborCost = 50000;
+                    
+                    Log::info("SyncMechanicReports: Setting default labor cost for mechanic #{$mechanic->id} on service #{$service->id}");
+                    
+                    $service->mechanics()->updateExistingPivot($mechanic->id, [
+                        'labor_cost' => $defaultLaborCost,
+                    ]);
+                    
+                    $laborCost = $defaultLaborCost;
+                }
+                
+                // Verify week dates are set
+                if (empty($weekStart) || empty($weekEnd)) {
+                    Log::error("SyncMechanicReports: Week dates still not set for mechanic #{$mechanic->id} on service #{$service->id}");
+                    
+                    // Use current week as fallback
+                    $weekStart = Carbon::now()->startOfWeek()->format('Y-m-d');
+                    $weekEnd = Carbon::now()->endOfWeek()->format('Y-m-d');
+                }
+                
+                // Update mechanic report
+                $this->updateMechanicReport($mechanic, $weekStart, $weekEnd);
+            } catch (\Exception $e) {
+                Log::error("SyncMechanicReports: Error processing mechanic for service #{$service->id}: " . $e->getMessage(), [
+                    'mechanic_id' => $mechanic->id ?? 'unknown',
+                    'trace' => $e->getTraceAsString(),
                 ]);
-                
-                // Refresh mechanic to get updated pivot data
-                $mechanic = Mechanic::find($mechanic->id);
-                $mechanic->load(['services' => function ($query) use ($service) {
-                    $query->where('services.id', $service->id);
-                }]);
             }
-            
-            // Set labor_cost if not set
-            $laborCost = $mechanic->pivot->labor_cost;
-            if (empty($laborCost) || $laborCost == 0) {
-                $defaultLaborCost = 50000;
-                
-                Log::info("SyncMechanicReports: Setting default labor cost for mechanic #{$mechanic->id} on service #{$service->id}");
-                
-                $service->mechanics()->updateExistingPivot($mechanic->id, [
-                    'labor_cost' => $defaultLaborCost,
-                ]);
-                
-                $laborCost = $defaultLaborCost;
-                
-                // Refresh mechanic to get updated pivot data
-                $mechanic = Mechanic::find($mechanic->id);
-                $mechanic->load(['services' => function ($query) use ($service) {
-                    $query->where('services.id', $service->id);
-                }]);
-            }
-            
-            // Get week dates
-            $weekStart = $mechanic->pivot->week_start;
-            $weekEnd = $mechanic->pivot->week_end;
-            
-            // Update mechanic report
-            $this->updateMechanicReport($mechanic, $weekStart, $weekEnd);
         }
     }
 
