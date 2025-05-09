@@ -27,6 +27,7 @@ docker exec $CONTAINER_NAME php artisan config:clear
 docker exec $CONTAINER_NAME php artisan route:clear
 docker exec $CONTAINER_NAME php artisan view:clear
 docker exec $CONTAINER_NAME php artisan package:discover
+docker exec $CONTAINER_NAME php artisan package:discover
 
 # Optimize the application
 echo "Optimizing application..."

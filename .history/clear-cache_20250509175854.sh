@@ -14,7 +14,7 @@ docker-compose exec app php artisan cache:clear
 docker-compose exec app php artisan view:clear
 docker-compose exec app php artisan route:clear
 docker-compose exec app php artisan config:clear
-docker-compose exec app php artisan package:discover
+docker-compose exec app php artisan livewire:discover
 
 # Optimize the application
 docker-compose exec app php artisan optimize:clear
