@@ -346,7 +346,7 @@ class ServiceResource extends Resource
                                     ->label('Biaya Jasa')
                                     ->numeric()
                                     ->prefix('Rp')
-                                    ->default(function ($state) {
+                                    ->default(function ($state, $record, $context) {
                                         // Jika state sudah ada, gunakan state
                                         if ($state && $state > 0) {
                                             return $state;

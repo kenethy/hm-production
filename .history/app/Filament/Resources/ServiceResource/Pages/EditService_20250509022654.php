@@ -14,37 +14,6 @@ class EditService extends EditRecord
 {
     protected static string $resource = ServiceResource::class;
 
-    protected function mutateFormDataBeforeFill(array $data): array
-    {
-        // Log data yang akan diisi ke form
-        Log::info("EditService: Form data before fill", $data);
-
-        // Jika ada mechanics, siapkan mechanic_costs
-        if (isset($data['mechanics']) && is_array($data['mechanics'])) {
-            $mechanicCosts = [];
-
-            // Ambil data montir dan biaya jasa dari database
-            $service = $this->record;
-
-            if ($service) {
-                foreach ($service->mechanics as $mechanic) {
-                    $mechanicCosts[] = [
-                        'mechanic_id' => $mechanic->id,
-                        'labor_cost' => $mechanic->pivot->labor_cost,
-                    ];
-                }
-
-                // Log mechanic_costs yang akan diisi ke form
-                Log::info("EditService: Mechanic costs data", $mechanicCosts);
-
-                // Tambahkan mechanic_costs ke data
-                $data['mechanic_costs'] = $mechanicCosts;
-            }
-        }
-
-        return $data;
-    }
-
     protected function getHeaderActions(): array
     {
         return [

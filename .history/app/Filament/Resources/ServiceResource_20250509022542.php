@@ -346,15 +346,7 @@ class ServiceResource extends Resource
                                     ->label('Biaya Jasa')
                                     ->numeric()
                                     ->prefix('Rp')
-                                    ->default(function ($state) {
-                                        // Jika state sudah ada, gunakan state
-                                        if ($state && $state > 0) {
-                                            return $state;
-                                        }
-
-                                        // Jika tidak, gunakan default
-                                        return 50000; // Default labor cost
-                                    })
+                                    ->default(0)
                                     ->required(),
                             ])
                             ->itemLabel(function (array $state): ?string {
