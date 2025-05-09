@@ -188,32 +188,6 @@ class MechanicReportResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('refreshReport')
-                    ->label('Refresh')
-                    ->icon('heroicon-o-arrow-path')
-                    ->color('warning')
-                    ->tooltip('Memperbarui rekap montir ini berdasarkan data servis terbaru')
-                    ->action(function (MechanicReport $record) {
-                        // Jalankan command untuk memperbarui rekap montir ini
-                        $output = '';
-                        try {
-                            Artisan::call('mechanic:sync-reports', [
-                                '--mechanic_id' => $record->mechanic_id,
-                            ], $output);
-
-                            Notification::make()
-                                ->title('Rekap montir berhasil diperbarui')
-                                ->success()
-                                ->body('Rekap montir telah diperbarui berdasarkan data servis terbaru.')
-                                ->send();
-                        } catch (\Exception $e) {
-                            Notification::make()
-                                ->title('Gagal memperbarui rekap montir')
-                                ->danger()
-                                ->body('Terjadi kesalahan saat memperbarui rekap montir: ' . $e->getMessage())
-                                ->send();
-                        }
-                    }),
                 Tables\Actions\Action::make('markAsPaid')
                     ->label('Tandai Dibayar')
                     ->icon('heroicon-o-check-circle')
