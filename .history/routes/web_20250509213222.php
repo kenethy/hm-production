@@ -47,11 +47,6 @@ Route::post('/kontak', [ContactController::class, 'store'])->name('contact.store
 Route::get('/promo', [PromoController::class, 'index'])->name('promos');
 Route::get('/promo/{slug}', [PromoController::class, 'show'])->name('promos.show');
 
-// Mechanic Service History
-Route::get('/admin/mechanic-reports/{id}/services', [MechanicServiceHistoryController::class, 'show'])
-    ->name('mechanic.services.history')
-    ->middleware(['web', 'auth']);
-
 // Sitemap
 Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 Route::get('/sitemap/main', function () {
