@@ -282,10 +282,6 @@ class ServiceResource extends Resource
                             ->preload()
                             ->searchable()
                             ->reactive()
-                            ->visible(function () {
-                                // Hanya tampilkan untuk admin
-                                return Auth::user()->isAdmin();
-                            })
                             ->afterStateUpdated(function ($state, Forms\Set $set, $record) {
                                 if (is_array($state)) {
                                     $mechanicCosts = [];
@@ -433,22 +429,11 @@ class ServiceResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('status')
                             ->label('Status Servis')
-                            ->options(function () {
-                                // Jika user adalah admin, tampilkan semua opsi
-                                if (Auth::user()->isAdmin()) {
-                                    return [
-                                        'in_progress' => 'Dalam Pengerjaan',
-                                        'completed' => 'Selesai',
-                                        'cancelled' => 'Dibatalkan',
-                                    ];
-                                }
-
-                                // Jika user adalah staff, hanya tampilkan opsi 'in_progress' dan 'cancelled'
-                                return [
-                                    'in_progress' => 'Dalam Pengerjaan',
-                                    'cancelled' => 'Dibatalkan',
-                                ];
-                            })
+                            ->options([
+                                'in_progress' => 'Dalam Pengerjaan',
+                                'completed' => 'Selesai',
+                                'cancelled' => 'Dibatalkan',
+                            ])
                             ->default('in_progress')
                             ->selectablePlaceholder(false)
                             ->required()
@@ -686,7 +671,7 @@ class ServiceResource extends Resource
                     ->label('Selesai')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn(Service $record) => $record->status === 'in_progress' && Auth::user()->isAdmin())
+                    ->visible(fn(Service $record) => $record->status === 'in_progress')
                     ->form(function (Service $record) {
                         // Ambil montir yang sudah ada
                         $existingMechanics = $record->mechanics()->pluck('mechanic_id')->toArray();
@@ -1209,7 +1194,6 @@ class ServiceResource extends Resource
                         ->label('Tandai Selesai')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn() => Auth::user()->isAdmin())
                         ->form([
                             Forms\Components\TextInput::make('invoice_number')
                                 ->label('Nomor Nota')

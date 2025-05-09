@@ -686,7 +686,7 @@ class ServiceResource extends Resource
                     ->label('Selesai')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn(Service $record) => $record->status === 'in_progress' && Auth::user()->isAdmin())
+                    ->visible(fn(Service $record) => $record->status === 'in_progress')
                     ->form(function (Service $record) {
                         // Ambil montir yang sudah ada
                         $existingMechanics = $record->mechanics()->pluck('mechanic_id')->toArray();
@@ -1209,7 +1209,6 @@ class ServiceResource extends Resource
                         ->label('Tandai Selesai')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->visible(fn() => Auth::user()->isAdmin())
                         ->form([
                             Forms\Components\TextInput::make('invoice_number')
                                 ->label('Nomor Nota')

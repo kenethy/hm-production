@@ -79,7 +79,6 @@ class User extends Authenticatable
      */
     public function isStaff(): bool
     {
-        // Staff adalah user dengan role 'staff' atau email tertentu
-        return $this->role === 'staff' || $this->email === 'hartonomotor1979@user.com';
+        return $this->role === 'staff';
     }
 }
